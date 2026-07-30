@@ -1,0 +1,16 @@
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\bin\Debug\net10.0\FileManager.Infrastructure.deps.json
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\bin\Debug\net10.0\FileManager.Infrastructure.dll
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\bin\Debug\net10.0\FileManager.Infrastructure.pdb
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\bin\Debug\net10.0\FileManager.Contracts.dll
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\bin\Debug\net10.0\FileManager.Contracts.pdb
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\obj\Debug\net10.0\FileManager.Infrastructure.csproj.AssemblyReference.cache
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\obj\Debug\net10.0\FileManager.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\obj\Debug\net10.0\FileManager.Infrastructure.AssemblyInfoInputs.cache
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\obj\Debug\net10.0\FileManager.Infrastructure.AssemblyInfo.cs
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\obj\Debug\net10.0\FileManager.Infrastructure.csproj.CoreCompileInputs.cache
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\obj\Debug\net10.0\FileManager.Infrastructure.sourcelink.json
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\obj\Debug\net10.0\FileMana.4FF59EDB.Up2Date
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\obj\Debug\net10.0\FileManager.Infrastructure.dll
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\obj\Debug\net10.0\refint\FileManager.Infrastructure.dll
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\obj\Debug\net10.0\FileManager.Infrastructure.pdb
+E:\BackupWork\VCS\Github\FileManager\src\FileManager.Infrastructure\obj\Debug\net10.0\ref\FileManager.Infrastructure.dll

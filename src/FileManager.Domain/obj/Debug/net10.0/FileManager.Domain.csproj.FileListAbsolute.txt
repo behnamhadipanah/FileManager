@@ -1,0 +1,13 @@
+e:\BackupWork\VCS\Github\FileManager\src\FileManager.Domain\bin\Debug\net10.0\FileManager.Domain.deps.json
+e:\BackupWork\VCS\Github\FileManager\src\FileManager.Domain\bin\Debug\net10.0\FileManager.Domain.dll
+e:\BackupWork\VCS\Github\FileManager\src\FileManager.Domain\bin\Debug\net10.0\FileManager.Domain.pdb
+e:\BackupWork\VCS\Github\FileManager\src\FileManager.Domain\obj\Debug\net10.0\FileManager.Domain.csproj.AssemblyReference.cache
+e:\BackupWork\VCS\Github\FileManager\src\FileManager.Domain\obj\Debug\net10.0\FileManager.Domain.GeneratedMSBuildEditorConfig.editorconfig
+e:\BackupWork\VCS\Github\FileManager\src\FileManager.Domain\obj\Debug\net10.0\FileManager.Domain.AssemblyInfoInputs.cache
+e:\BackupWork\VCS\Github\FileManager\src\FileManager.Domain\obj\Debug\net10.0\FileManager.Domain.AssemblyInfo.cs
+e:\BackupWork\VCS\Github\FileManager\src\FileManager.Domain\obj\Debug\net10.0\FileManager.Domain.csproj.CoreCompileInputs.cache
+e:\BackupWork\VCS\Github\FileManager\src\FileManager.Domain\obj\Debug\net10.0\FileManager.Domain.sourcelink.json
+e:\BackupWork\VCS\Github\FileManager\src\FileManager.Domain\obj\Debug\net10.0\FileManager.Domain.dll
+e:\BackupWork\VCS\Github\FileManager\src\FileManager.Domain\obj\Debug\net10.0\refint\FileManager.Domain.dll
+e:\BackupWork\VCS\Github\FileManager\src\FileManager.Domain\obj\Debug\net10.0\FileManager.Domain.pdb
+e:\BackupWork\VCS\Github\FileManager\src\FileManager.Domain\obj\Debug\net10.0\ref\FileManager.Domain.dll

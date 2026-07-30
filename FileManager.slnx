@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/docker/" />
+  <Folder Name="/docs/" />
+  <Folder Name="/src/">
+    <Project Path="src/FileManager.Api/FileManager.Api.csproj" />
+    <Project Path="src/FileManager.Application/FileManager.Application.csproj" />
+    <Project Path="src/FileManager.Contracts/FileManager.Contracts.csproj" />
+    <Project Path="src/FileManager.Domain/FileManager.Domain.csproj" />
+    <Project Path="src/FileManager.Infrastructure/FileManager.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FileManager.IntegrationTests/FileManager.IntegrationTests.csproj" />
+    <Project Path="tests/FileManager.UnitTests/FileManager.UnitTests.csproj" />
+  </Folder>
+</Solution>

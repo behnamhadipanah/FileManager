@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+      <PackageReference Include="Kootam.Framework.Application" Version="1.0.0" />
+      <PackageReference Include="Kootam.Cqrs.Abstractions" Version="1.0.0" />
+      <PackageReference Include="Kootam.Cqrs" Version="1.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\FileManager.Contracts\FileManager.Contracts.csproj" />
+      <ProjectReference Include="..\FileManager.Domain\FileManager.Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Abstractions\" />
+      <Folder Include="Authentication\" />
+      <Folder Include="BackgroundJobs\" />
+      <Folder Include="Behaviors\" />
+      <Folder Include="DTOs\" />
+      <Folder Include="EventHandlers\" />
+      <Folder Include="Features\Commands\Applications\" />
+      <Folder Include="Features\Commands\Files\" />
+      <Folder Include="Features\Commands\Folders\" />
+      <Folder Include="Features\Commands\Trash\" />
+      <Folder Include="Features\Queries\Applications\" />
+      <Folder Include="Features\Queries\Files\" />
+      <Folder Include="Features\Queries\Folders\" />
+      <Folder Include="Features\Queries\Trash\" />
+      <Folder Include="Mappers\" />
+      <Folder Include="Services\" />
+      <Folder Include="Validators\" />
+    </ItemGroup>
+
+</Project>

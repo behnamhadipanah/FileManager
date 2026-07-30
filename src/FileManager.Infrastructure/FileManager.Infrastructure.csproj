@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Dapper" Version="2.1.79" />
+      <PackageReference Include="Kootam.Framework.Infrastructure" Version="1.0.0" />
+      <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.2" />
+        <PackageReference Include="Elastic.Clients.Elasticsearch" Version="9.4.2" />
+        <PackageReference Include="FFMpegCore" Version="5.4.0" />
+
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\FileManager.Contracts\FileManager.Contracts.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Authentication\" />
+      <Folder Include="BackgroundWorkers\" />
+      <Folder Include="Configuration\" />
+      <Folder Include="DependencyInjection\" />
+      <Folder Include="Elastic\" />
+      <Folder Include="Messaging\" />
+      <Folder Include="Persistence\SqlServer\Commands\" />
+      <Folder Include="Persistence\SqlServer\Connection\" />
+      <Folder Include="Persistence\SqlServer\Migrations\" />
+      <Folder Include="Persistence\SqlServer\Queries\" />
+      <Folder Include="Persistence\SqlServer\Repositories\" />
+      <Folder Include="Persistence\SqlServer\Sql\" />
+      <Folder Include="Persistence\SqlServer\Tables\" />
+    </ItemGroup>
+
+</Project>
