@@ -1,0 +1,68 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: filemanager-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Your_password123"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"Your_password123\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: filemanager-rustfs
+    environment:
+      RUSTFS_ACCESS_KEY: "rustfsadmin"
+      RUSTFS_SECRET_KEY: "rustfsadmin123"
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - rustfs-data:/data
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: filemanager-elasticsearch
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+
+  filemanager-api:
+    build:
+      context: ..
+      dockerfile: docker/FileManager.Api.Dockerfile
+    container_name: filemanager-api
+    depends_on:
+      - sqlserver
+      - rustfs
+      - elasticsearch
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Production"
+      ASPNETCORE_URLS: "http://+:8080"
+      SqlServer__ConnectionString: "Server=sqlserver,1433;Database=FileManager;User Id=sa;Password=Your_password123;TrustServerCertificate=True;"
+      RustFs__ServiceUrl: "http://rustfs:9000"
+      RustFs__AccessKey: "rustfsadmin"
+      RustFs__SecretKey: "rustfsadmin123"
+      Elasticsearch__Uri: "http://elasticsearch:9200"
+    ports:
+      - "8080:8080"
+
+volumes:
+  sqlserver-data:
+  rustfs-data:
+  elasticsearch-data:

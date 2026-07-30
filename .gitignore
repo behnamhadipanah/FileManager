@@ -1,1 +1,36 @@
-﻿
+﻿# Build results
+bin/
+obj/
+out/
+
+# Rider / ReSharper / .idea
+.idea/
+*.sln.iml
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# NuGet (the ./nugets folder is a checked-in local feed for Kootam.* packages - keep those)
+*.nupkg
+*.snupkg
+!/nugets/*.nupkg
+packages/
+.nuget/
+
+# Test results
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Docker volumes / local data
+docker/**/data/
