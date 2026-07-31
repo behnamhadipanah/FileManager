@@ -17,16 +17,13 @@ public sealed class GetManageFolderQueryHandler(
     public async Task<Result<FolderResponse>> Handle(
         GetManageFolderQuery query, CancellationToken cancellationToken = default)
     {
-        var application = await applicationRepository.GetByBusinessIdAsync(
-            BusinessId.FromGuid(query.ApplicationBusinessId), cancellationToken);
-
-        if (application is null)
+        if (!await applicationRepository.ExistsAsync(query.ApplicationId, cancellationToken))
             return Result<FolderResponse>.Failure(ResultStatus.NotFound, DomainMessages.ApplicationNotFound);
 
         var folder = query.FolderBusinessId is null
-            ? await folderRepository.GetRootAsync(application.Id, cancellationToken)
+            ? await folderRepository.GetRootAsync(query.ApplicationId, cancellationToken)
             : await folderRepository.GetByBusinessIdAsync(
-                application.Id,
+                query.ApplicationId,
                 BusinessId.FromGuid(query.FolderBusinessId.Value),
                 cancellationToken);
 

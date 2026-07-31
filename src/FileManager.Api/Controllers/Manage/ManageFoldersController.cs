@@ -8,11 +8,10 @@ namespace FileManager.Api.Controllers.Manage;
 
 /// <summary>
 /// Authorized folder browsing for the file manager admin UI.
-/// Public application APIs remain available without authentication.
 /// </summary>
 [ApiController]
 [Authorize(AuthenticationSchemes = "Jwt")]
-[Route("api/manage/applications/{applicationBusinessId:guid}/folders")]
+[Route("api/manage/applications/{applicationId:long}/folders")]
 public sealed class ManageFoldersController : BaseCqrsController
 {
     /// <summary>
@@ -22,11 +21,25 @@ public sealed class ManageFoldersController : BaseCqrsController
     [HttpGet]
     [HttpGet("{folderBusinessId:guid}")]
     public Task<IActionResult> Get(
-        [FromRoute] Guid applicationBusinessId,
+        [FromRoute] long applicationId,
         [FromRoute] Guid? folderBusinessId = null,
         [FromQuery] bool? isDeleted = null)
     {
-        var query = new GetManageFolderQuery(applicationBusinessId, folderBusinessId, isDeleted);
+        var query = new GetManageFolderQuery(applicationId, folderBusinessId, isDeleted);
         return Query<FolderResponse>(query);
+    }
+
+    /// <summary>
+    /// Lists child folders and files for a folder, or the root folder when <paramref name="folderBusinessId"/> is omitted.
+    /// </summary>
+    [HttpGet("contents")]
+    [HttpGet("{folderBusinessId:guid}/contents")]
+    public Task<IActionResult> GetContents(
+        [FromRoute] long applicationId,
+        [FromRoute] Guid? folderBusinessId = null,
+        [FromQuery] bool? isDeleted = null)
+    {
+        var query = new GetFolderContentsQuery(applicationId, folderBusinessId, isDeleted);
+        return Query<FolderContentsResponse>(query);
     }
 }

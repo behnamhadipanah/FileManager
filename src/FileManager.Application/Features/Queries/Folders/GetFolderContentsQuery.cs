@@ -3,7 +3,7 @@ using Kootam.Cqrs.Abstractions.Queries;
 
 namespace FileManager.Application.Features.Queries.Folders;
 
-public sealed record GetManageFolderQuery(
+public sealed record GetFolderContentsQuery(
     long ApplicationId,
     Guid? FolderBusinessId,
-    bool? IsDeleted) : IQuery<FolderResponse>;
+    bool? IsDeleted) : IQuery<FolderContentsResponse>;

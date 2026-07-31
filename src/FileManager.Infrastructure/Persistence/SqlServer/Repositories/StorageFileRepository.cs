@@ -116,6 +116,42 @@ public sealed class StorageFileRepository(ISqlConnectionFactory connectionFactor
         return await cmd.ExecuteScalarAsync(cancellationToken) is not null;
     }
 
+    public async Task<IReadOnlyList<StorageFile>> GetByParentFolderIdAsync(
+        long applicationId,
+        long parentFolderId,
+        bool? isDeleted,
+        CancellationToken cancellationToken)
+    {
+        await using var conn = (SqlConnection)connectionFactory.CreateReadConnection();
+        await conn.OpenAsync(cancellationToken);
+
+        await using var cmd = conn.CreateCommand();
+        var deletedFilter = isDeleted is null
+            ? $"{StorageFiles.IsDeleted.Name} = 0"
+            : $"{StorageFiles.IsDeleted.Name} = {StorageFiles.IsDeleted.Parameter}";
+
+        cmd.CommandText = $"""
+            SELECT {SqlSchema.Cols(SelectAll)} FROM {StorageFiles.Table}
+            WHERE {StorageFiles.ApplicationId.Name} = {StorageFiles.ApplicationId.Parameter}
+              AND {StorageFiles.ParentFolderId.Name} = {StorageFiles.ParentFolderId.Parameter}
+              AND {StorageFiles.UploadStatus.Name} <> {StorageFiles.UploadStatus.Parameter}
+              AND {deletedFilter}
+            ORDER BY {StorageFiles.Name.Name}
+            """;
+        cmd.Add(StorageFiles.ApplicationId, applicationId);
+        cmd.Add(StorageFiles.ParentFolderId, parentFolderId);
+        cmd.Add(StorageFiles.UploadStatus, (int)UploadStatus.Failed);
+        if (isDeleted is not null)
+            cmd.Add(StorageFiles.IsDeleted, isDeleted.Value);
+
+        var files = new List<StorageFile>();
+        await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+            files.Add(Map(reader));
+
+        return files;
+    }
+
     public async Task InsertAsync(StorageFile file, CancellationToken cancellationToken)
     {
         await using var conn = (SqlConnection)connectionFactory.CreateWriteConnection();

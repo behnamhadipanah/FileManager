@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace FileManager.Application.Validators.Folders;
 
-public sealed class GetManageFolderQueryValidator : AbstractValidator<GetManageFolderQuery>
+public sealed class GetFolderContentsQueryValidator : AbstractValidator<GetFolderContentsQuery>
 {
-    public GetManageFolderQueryValidator()
+    public GetFolderContentsQueryValidator()
     {
         RuleFor(x => x.ApplicationId).GreaterThan(0);
     }

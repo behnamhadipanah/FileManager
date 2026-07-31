@@ -11,6 +11,11 @@ public interface IStorageFileRepository
     Task<StorageFile?> GetByContentHashAsync(long applicationId, ContentHash contentHash, CancellationToken cancellationToken);
     Task<bool> ExistsAsync(long applicationId, long id, CancellationToken cancellationToken);
     Task<bool> ExistsByNameAsync(long applicationId, long? parentFolderId, string name, CancellationToken cancellationToken);
+    Task<IReadOnlyList<StorageFile>> GetByParentFolderIdAsync(
+        long applicationId,
+        long parentFolderId,
+        bool? isDeleted,
+        CancellationToken cancellationToken);
     Task InsertAsync(StorageFile file, CancellationToken cancellationToken);
     Task UpdateAsync(StorageFile file, CancellationToken cancellationToken);
     Task DeleteAsync(long applicationId, long id, CancellationToken cancellationToken);

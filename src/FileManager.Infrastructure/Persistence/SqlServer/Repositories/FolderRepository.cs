@@ -134,6 +134,40 @@ public sealed class FolderRepository(ISqlConnectionFactory connectionFactory) : 
         return await cmd.ExecuteScalarAsync(cancellationToken) is not null;
     }
 
+    public async Task<IReadOnlyList<Folder>> GetByParentFolderIdAsync(
+        long applicationId,
+        long parentFolderId,
+        bool? isDeleted,
+        CancellationToken cancellationToken)
+    {
+        await using var conn = (SqlConnection)connectionFactory.CreateReadConnection();
+        await conn.OpenAsync(cancellationToken);
+
+        await using var cmd = conn.CreateCommand();
+        var deletedFilter = isDeleted is null
+            ? $"{Folders.IsDeleted.Name} = 0"
+            : $"{Folders.IsDeleted.Name} = {Folders.IsDeleted.Parameter}";
+
+        cmd.CommandText = $"""
+            SELECT {SqlSchema.Cols(SelectAll)} FROM {Folders.Table}
+            WHERE {Folders.ApplicationId.Name} = {Folders.ApplicationId.Parameter}
+              AND {Folders.ParentFolderId.Name} = {Folders.ParentFolderId.Parameter}
+              AND {deletedFilter}
+            ORDER BY {Folders.Name.Name}
+            """;
+        cmd.Add(Folders.ApplicationId, applicationId);
+        cmd.Add(Folders.ParentFolderId, parentFolderId);
+        if (isDeleted is not null)
+            cmd.Add(Folders.IsDeleted, isDeleted.Value);
+
+        var folders = new List<Folder>();
+        await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+            folders.Add(Map(reader));
+
+        return folders;
+    }
+
     public async Task InsertAsync(Folder folder, CancellationToken cancellationToken)
     {
         await using var conn = (SqlConnection)connectionFactory.CreateWriteConnection();

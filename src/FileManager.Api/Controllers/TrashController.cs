@@ -1,4 +1,5 @@
 using FileManager.Application.Features.Commands.Trash;
+using FileManager.Application.Features.Queries.Trash;
 using FileManager.Contracts.Requests.Trash;
 using FileManager.Contracts.Responses.Trash;
 using FileManager.Domain.Enumerations;
@@ -15,6 +16,16 @@ namespace FileManager.Api.Controllers;
 [Route("api/applications/{applicationId:long}/trash")]
 public sealed class TrashController : BaseCqrsController
 {
+    /// <summary>
+    /// Lists trashed folders and files for the application.
+    /// </summary>
+    [HttpGet("items")]
+    public Task<IActionResult> GetItems([FromRoute] long applicationId)
+    {
+        var query = new GetTrashContentsQuery(applicationId);
+        return Query<TrashContentsResponse>(query);
+    }
+
     /// <summary>
     /// Moves a file or folder to trash (soft delete).
     /// </summary>

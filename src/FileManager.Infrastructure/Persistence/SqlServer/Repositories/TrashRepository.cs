@@ -57,6 +57,30 @@ public sealed class TrashRepository(ISqlConnectionFactory connectionFactory) : I
         return await reader.ReadAsync(cancellationToken) ? Map(reader) : null;
     }
 
+    public async Task<IReadOnlyList<TrashItem>> GetActiveByApplicationIdAsync(
+        long applicationId, CancellationToken cancellationToken)
+    {
+        await using var conn = (SqlConnection)connectionFactory.CreateReadConnection();
+        await conn.OpenAsync(cancellationToken);
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = $"""
+            SELECT {SqlSchema.Cols(SelectAll)} FROM {TrashItems.Table}
+            WHERE {TrashItems.ApplicationId.Name} = {TrashItems.ApplicationId.Parameter}
+              AND {TrashItems.IsPurged.Name} = 0
+              AND {TrashItems.IsRestored.Name} = 0
+            ORDER BY {TrashItems.CreationTime.Name} DESC
+            """;
+        cmd.Add(TrashItems.ApplicationId, applicationId);
+
+        var items = new List<TrashItem>();
+        await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+            items.Add(Map(reader));
+
+        return items;
+    }
+
     public async Task<IReadOnlyList<TrashItem>> GetExpiredAsync(DateTime olderThan, CancellationToken cancellationToken)
     {
         await using var conn = (SqlConnection)connectionFactory.CreateReadConnection();

@@ -11,6 +11,11 @@ public interface IFolderRepository
     Task<bool> ExistsAsync(long applicationId, long id, CancellationToken cancellationToken);
     Task<bool> ExistsByNameAsync(long applicationId, long? parentFolderId, string name, CancellationToken cancellationToken);
     Task<bool> HasChildrenAsync(long applicationId, long folderId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<Folder>> GetByParentFolderIdAsync(
+        long applicationId,
+        long parentFolderId,
+        bool? isDeleted,
+        CancellationToken cancellationToken);
     Task InsertAsync(Folder folder, CancellationToken cancellationToken);
     Task UpdateAsync(Folder folder, CancellationToken cancellationToken);
     Task DeleteAsync(long applicationId, long id, CancellationToken cancellationToken);
