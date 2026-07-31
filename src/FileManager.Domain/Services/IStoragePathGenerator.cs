@@ -5,6 +5,6 @@ namespace FileManager.Domain.Services;
 
 public interface IStoragePathGenerator
 {
-    StorageObjectKey GenerateObjectKey(long applicationId, StorageFileType fileType, string uniqueFileName);
-    StorageObjectKey GenerateThumbnailObjectKey(StorageObjectKey originalObjectKey);
+    StorageObjectKey GenerateObjectKey(Guid fileBusinessId);
+    StorageObjectKey GenerateThumbnailObjectKey(Guid fileBusinessId);
 }

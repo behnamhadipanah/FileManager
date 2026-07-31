@@ -3,7 +3,7 @@ namespace FileManager.Application.Abstractions;
 public sealed record FileUploadWorkItem(
     long ApplicationId,
     long FileId,
-    string StagingPath,
+    string StagingObjectKey,
     string OriginalFileName,
     string ContentType);
 

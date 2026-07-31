@@ -29,7 +29,6 @@ public static class InfrastructureServiceCollectionExtensions
     {
         services.Configure<SqlServerOptions>(configuration.GetSection(SqlServerOptions.SectionName));
         services.Configure<RustFsOptions>(configuration.GetSection(RustFsOptions.SectionName));
-        services.Configure<UploadStagingOptions>(configuration.GetSection(UploadStagingOptions.SectionName));
 
         AddPersistence(services);
         AddObjectStorage(services, configuration);
@@ -69,7 +68,10 @@ public static class InfrastructureServiceCollectionExtensions
         // Swap this single registration to target a different provider
         // (MinIO/AWS S3/Azure Blob/local disk) without touching any calling code.
         services.AddSingleton<IObjectStorage, RustFsObjectStorage>();
+        services.AddSingleton<IApplicationBucketNaming, ApplicationBucketNaming>();
+        services.AddScoped<IApplicationBucketService, ApplicationBucketService>();
         services.AddScoped<IFileStorageService, FileStorageService>();
+        services.AddScoped<IUploadStagingService, RustFsUploadStagingService>();
     }
 
     private static void AddDomainServices(IServiceCollection services)
@@ -86,7 +88,6 @@ public static class InfrastructureServiceCollectionExtensions
     {
         services.AddSingleton<FileUploadQueue>();
         services.AddSingleton<IFileUploadQueue>(sp => sp.GetRequiredService<FileUploadQueue>());
-        services.AddSingleton<IUploadStagingService, UploadStagingService>();
         services.AddHostedService<FileUploadBackgroundWorker>();
     }
 

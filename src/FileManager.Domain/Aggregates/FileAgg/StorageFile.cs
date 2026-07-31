@@ -85,7 +85,6 @@ public sealed class StorageFile : AggregateRoot, IMultiTenant<long>, IMultiTenan
         FileName name,
         MimeType mimeType,
         FileSize size,
-        StorageObjectKey stagingObjectKey,
         StorageProvider provider,
         StorageFileType fileType,
         DateTime now,
@@ -101,7 +100,6 @@ public sealed class StorageFile : AggregateRoot, IMultiTenant<long>, IMultiTenan
             MimeType = mimeType,
             Size = size,
             ContentHash = ContentHash.FromString(PendingContentHashValue),
-            ObjectKey = stagingObjectKey,
             Provider = provider,
             FileType = fileType,
             UploadStatus = UploadStatus.Pending,
@@ -111,6 +109,7 @@ public sealed class StorageFile : AggregateRoot, IMultiTenant<long>, IMultiTenan
 
         file.SetCreated(now);
         file.SetCreator(creatorId);
+        file.ObjectKey = StorageObjectKey.FromString(((Guid)file.BusinessId).ToString("D"));
         return file;
     }
 

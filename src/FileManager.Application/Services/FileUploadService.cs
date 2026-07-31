@@ -1,6 +1,7 @@
 using FileManager.Application.Abstractions;
 using FileManager.Application.Mappers;
 using FileManager.Contracts.Responses.Files;
+using FileManager.Domain.Aggregates.ApplicationAgg;
 using FileManager.Domain.Aggregates.FileAgg;
 using FileManager.Domain.Enumerations;
 using FileManager.Domain.Messages;
@@ -18,8 +19,8 @@ public sealed class FileUploadService(
     IStorageFileRepository storageFileRepository,
     IFolderRepository folderRepository,
     IFileStorageService fileStorageService,
+    IApplicationBucketService bucketService,
     IHashCalculator hashCalculator,
-    IFileNameGenerator fileNameGenerator,
     IStoragePathGenerator storagePathGenerator,
     IImageConverter imageConverter,
     IVideoConverter videoConverter,
@@ -46,12 +47,17 @@ public sealed class FileUploadService(
             : contentType);
         var fileType = UploadValidationPolicy.ResolveFileType(mimeType);
         var displayName = FileName.FromString(originalFileName);
+        var storageContext = new ApplicationStorageContext(application.ApplicationName, fileType);
 
         if (await storageFileRepository.ExistsByNameAsync(applicationId, parentFolderId, displayName.Value, cancellationToken))
             return Result<StorageFileResponse>.Failure(ResultStatus.Conflict, DomainMessages.FileNameExists);
 
-        var stagingPath = await uploadStagingService.SaveAsync(content, cancellationToken);
-        var stagingSize = FileSize.FromBytes(new FileInfo(stagingPath).Length);
+        await bucketService.EnsureBucketsExistAsync(application.ApplicationName, fileType, cancellationToken);
+
+        await using var contentBuffer = new MemoryStream();
+        await content.CopyToAsync(contentBuffer, cancellationToken);
+        contentBuffer.Position = 0;
+        var stagingSize = FileSize.FromBytes(contentBuffer.Length);
 
         try
         {
@@ -59,29 +65,30 @@ public sealed class FileUploadService(
         }
         catch (Domain.Exceptions.DomainException ex)
         {
-            await uploadStagingService.DeleteAsync(stagingPath, cancellationToken);
             return Result<StorageFileResponse>.Failure(ResultStatus.ValidationError, ex.Message);
         }
 
         var now = DateTime.UtcNow;
-        var stagingKey = StorageObjectKey.FromString($"staging/{Path.GetFileName(stagingPath)}");
         var file = StorageFile.CreatePendingUpload(
             applicationId,
             parentFolderId,
             displayName,
             mimeType,
             stagingSize,
-            stagingKey,
             StorageProvider.RustFs,
             fileType,
             now);
+
+        var fileBusinessId = (Guid)file.BusinessId;
+        var staging = await uploadStagingService.SaveAsync(
+            storageContext, fileBusinessId, contentBuffer, contentType, cancellationToken);
 
         await storageFileRepository.InsertAsync(file, cancellationToken);
 
         await uploadQueue.EnqueueAsync(new FileUploadWorkItem(
             applicationId,
             file.Id,
-            stagingPath,
+            staging.ObjectKey,
             originalFileName,
             contentType), cancellationToken);
 
@@ -95,15 +102,24 @@ public sealed class FileUploadService(
         if (file is null || file.UploadStatus is not UploadStatus.Pending)
             return;
 
+        var application = await applicationRepository.GetAsync(item.ApplicationId, cancellationToken)
+            ?? throw new InvalidOperationException(DomainMessages.ApplicationNotFound);
+
+        var storageContext = new ApplicationStorageContext(application.ApplicationName, file.FileType);
+        var fileBusinessId = (Guid)file.BusinessId;
+
         var now = DateTime.UtcNow;
         file.StartUploadProcessing(now);
         await storageFileRepository.UpdateAsync(file, cancellationToken);
 
         try
         {
-            await using var stagingStream = uploadStagingService.OpenRead(item.StagingPath);
+            await using var stagingStream = await uploadStagingService.OpenReadAsync(
+                storageContext, item.StagingObjectKey, cancellationToken);
+
             var processed = await ProcessContentAsync(
-                item.ApplicationId,
+                application,
+                fileBusinessId,
                 item.OriginalFileName,
                 item.ContentType,
                 stagingStream,
@@ -112,6 +128,7 @@ public sealed class FileUploadService(
             try
             {
                 await fileStorageService.SaveFileAsync(
+                    storageContext,
                     processed.ObjectKey.Value,
                     processed.Content,
                     processed.MimeType.Value,
@@ -142,20 +159,18 @@ public sealed class FileUploadService(
         }
         finally
         {
-            await uploadStagingService.DeleteAsync(item.StagingPath, cancellationToken);
+            await uploadStagingService.DeleteAsync(storageContext, item.StagingObjectKey, cancellationToken);
         }
     }
 
     private async Task<ProcessedUploadContent> ProcessContentAsync(
-        long applicationId,
+        RegisteredApplication application,
+        Guid fileBusinessId,
         string originalFileName,
         string contentType,
         Stream content,
         CancellationToken cancellationToken)
     {
-        var application = await applicationRepository.GetAsync(applicationId, cancellationToken)
-            ?? throw new InvalidOperationException(DomainMessages.ApplicationNotFound);
-
         var mimeType = MimeType.FromString(string.IsNullOrWhiteSpace(contentType)
             ? "application/octet-stream"
             : contentType);
@@ -204,8 +219,7 @@ public sealed class FileUploadService(
             var contentHash = await hashCalculator.ComputeAsync(uploadStream, cancellationToken);
             uploadStream.Position = 0;
 
-            var uniqueStorageName = fileNameGenerator.GenerateUniqueFileName(finalFileName);
-            var objectKey = storagePathGenerator.GenerateObjectKey(applicationId, fileType, uniqueStorageName);
+            var objectKey = storagePathGenerator.GenerateObjectKey(fileBusinessId);
 
             var outputStream = new MemoryStream();
             await uploadStream.CopyToAsync(outputStream, cancellationToken);

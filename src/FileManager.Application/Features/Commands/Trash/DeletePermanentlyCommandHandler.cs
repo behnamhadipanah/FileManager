@@ -11,6 +11,7 @@ using Kootam.Cqrs.Abstractions.Models;
 namespace FileManager.Application.Features.Commands.Trash;
 
 public sealed class DeletePermanentlyCommandHandler(
+    IApplicationRepository applicationRepository,
     IFolderRepository folderRepository,
     IStorageFileRepository storageFileRepository,
     ITrashRepository trashRepository,
@@ -20,6 +21,10 @@ public sealed class DeletePermanentlyCommandHandler(
     public async Task<Result<DeletePermanentlyResponse>> Handle(
         DeletePermanentlyCommand command, CancellationToken cancellationToken = default)
     {
+        var application = await applicationRepository.GetAsync(command.ApplicationId, cancellationToken);
+        if (application is null)
+            return Result<DeletePermanentlyResponse>.Failure(ResultStatus.NotFound, DomainMessages.ApplicationNotFound);
+
         var trashItem = await trashRepository.GetAsync(command.ApplicationId, command.TrashItemId, cancellationToken);
         if (trashItem is null)
             return Result<DeletePermanentlyResponse>.Failure(ResultStatus.NotFound, DomainMessages.TrashItemNotFound);
@@ -29,14 +34,16 @@ public sealed class DeletePermanentlyCommandHandler(
 
         return trashItem.ItemType switch
         {
-            TrashItemType.File => await DeleteFilePermanentlyAsync(trashItem, cancellationToken),
+            TrashItemType.File => await DeleteFilePermanentlyAsync(application.ApplicationName, trashItem, cancellationToken),
             TrashItemType.Folder => await DeleteFolderPermanentlyAsync(trashItem, cancellationToken),
             _ => Result<DeletePermanentlyResponse>.Failure(ResultStatus.ValidationError, DomainMessages.UnsupportedFileType)
         };
     }
 
     private async Task<Result<DeletePermanentlyResponse>> DeleteFilePermanentlyAsync(
-        Domain.Aggregates.TrashAgg.TrashItem trashItem, CancellationToken cancellationToken)
+        string applicationName,
+        Domain.Aggregates.TrashAgg.TrashItem trashItem,
+        CancellationToken cancellationToken)
     {
         var file = await storageFileRepository.GetAsync(trashItem.ApplicationId, trashItem.ItemId, cancellationToken);
         if (file is null)
@@ -45,10 +52,12 @@ public sealed class DeletePermanentlyCommandHandler(
         if (!file.IsDeleted)
             return Result<DeletePermanentlyResponse>.Failure(ResultStatus.Conflict, DomainMessages.FileNotInTrash);
 
-        await fileStorageService.DeleteFileAsync(file.ObjectKey.Value, cancellationToken);
+        var storageContext = new ApplicationStorageContext(applicationName, file.FileType);
+
+        await fileStorageService.DeleteFileAsync(storageContext, file.ObjectKey.Value, cancellationToken);
 
         if (file.ThumbnailObjectKey is not null)
-            await fileStorageService.DeleteThumbnailAsync(file.ThumbnailObjectKey.Value, cancellationToken);
+            await fileStorageService.DeleteThumbnailAsync(storageContext, file.ThumbnailObjectKey.Value, cancellationToken);
 
         await storageFileRepository.DeleteAsync(trashItem.ApplicationId, file.Id, cancellationToken);
         await trashRepository.DeleteAsync(trashItem.ApplicationId, trashItem.Id, cancellationToken);

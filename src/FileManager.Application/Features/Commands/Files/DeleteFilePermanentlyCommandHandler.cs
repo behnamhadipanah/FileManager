@@ -15,6 +15,7 @@ public sealed record DeleteFilePermanentlyCommand(
     Guid FileBusinessId) : IRequest<DeleteFilePermanentlyResponse>;
 
 public sealed class DeleteFilePermanentlyCommandHandler(
+    IApplicationRepository applicationRepository,
     IStorageFileRepository storageFileRepository,
     ITrashRepository trashRepository,
     IFileStorageService fileStorageService)
@@ -23,6 +24,10 @@ public sealed class DeleteFilePermanentlyCommandHandler(
     public async Task<Result<DeleteFilePermanentlyResponse>> Handle(
         DeleteFilePermanentlyCommand command, CancellationToken cancellationToken = default)
     {
+        var application = await applicationRepository.GetAsync(command.ApplicationId, cancellationToken);
+        if (application is null)
+            return Result<DeleteFilePermanentlyResponse>.Failure(ResultStatus.NotFound, DomainMessages.ApplicationNotFound);
+
         var file = await storageFileRepository.GetByBusinessIdAsync(
             command.ApplicationId, BusinessId.FromGuid(command.FileBusinessId), cancellationToken);
 
@@ -32,10 +37,12 @@ public sealed class DeleteFilePermanentlyCommandHandler(
         var trashItem = await trashRepository.GetByItemAsync(
             command.ApplicationId, TrashItemType.File, file.Id, cancellationToken);
 
-        await fileStorageService.DeleteFileAsync(file.ObjectKey.Value, cancellationToken);
+        var storageContext = new ApplicationStorageContext(application.ApplicationName, file.FileType);
+
+        await fileStorageService.DeleteFileAsync(storageContext, file.ObjectKey.Value, cancellationToken);
 
         if (file.ThumbnailObjectKey is not null)
-            await fileStorageService.DeleteThumbnailAsync(file.ThumbnailObjectKey.Value, cancellationToken);
+            await fileStorageService.DeleteThumbnailAsync(storageContext, file.ThumbnailObjectKey.Value, cancellationToken);
 
         if (trashItem is not null)
             await trashRepository.DeleteAsync(command.ApplicationId, trashItem.Id, cancellationToken);
