@@ -19,12 +19,12 @@ public sealed class ApplicationsController : BaseCqrsController
     {
         var command = new RegisterApplicationCommand(
             request.ApplicationName,
-            request.MinSizeUploadImage,
-            request.MaxSizeUploadImage,
-            request.MinSizeVideo,
-            request.MaxSizeVideo,
-            request.MinSizeDcoument,
-            request.MaxSizeDcoument);
+            request.MinImageSizeKilobytes,
+            request.MaxImageSizeKilobytes,
+            request.MinVideoSizeKilobytes,
+            request.MaxVideoSizeKilobytes,
+            request.MinDocumentSizeKilobytes,
+            request.MaxDocumentSizeKilobytes);
 
         return Create<RegisterApplicationCommand, RegisterApplicationResponse>(command);
     }

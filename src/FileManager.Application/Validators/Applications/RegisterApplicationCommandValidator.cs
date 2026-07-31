@@ -7,20 +7,18 @@ public sealed class RegisterApplicationCommandValidator : AbstractValidator<Regi
 {
     public RegisterApplicationCommandValidator()
     {
-        RuleFor(x => x.ApplicationName)
-            .NotEmpty()
-            .MaximumLength(200);
+        RuleFor(x => x.ApplicationName).NotEmpty().MaximumLength(200);
 
-        RuleFor(x => x.MinSizeUploadImage).GreaterThanOrEqualTo(0);
-        RuleFor(x => x.MaxSizeUploadImage).GreaterThan(0);
-        RuleFor(x => x.MaxSizeUploadImage).GreaterThanOrEqualTo(x => x.MinSizeUploadImage);
+        RuleFor(x => x.MinImageSizeKilobytes).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.MaxImageSizeKilobytes).GreaterThan(0);
+        RuleFor(x => x.MaxImageSizeKilobytes).GreaterThanOrEqualTo(x => x.MinImageSizeKilobytes);
 
-        RuleFor(x => x.MinSizeVideo).GreaterThanOrEqualTo(0);
-        RuleFor(x => x.MaxSizeVideo).GreaterThan(0);
-        RuleFor(x => x.MaxSizeVideo).GreaterThanOrEqualTo(x => x.MinSizeVideo);
+        RuleFor(x => x.MinVideoSizeKilobytes).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.MaxVideoSizeKilobytes).GreaterThan(0);
+        RuleFor(x => x.MaxVideoSizeKilobytes).GreaterThanOrEqualTo(x => x.MinVideoSizeKilobytes);
 
-        RuleFor(x => x.MinSizeDcoument).GreaterThanOrEqualTo(0);
-        RuleFor(x => x.MaxSizeDcoument).GreaterThan(0);
-        RuleFor(x => x.MaxSizeDcoument).GreaterThanOrEqualTo(x => x.MinSizeDcoument);
+        RuleFor(x => x.MinDocumentSizeKilobytes).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.MaxDocumentSizeKilobytes).GreaterThan(0);
+        RuleFor(x => x.MaxDocumentSizeKilobytes).GreaterThanOrEqualTo(x => x.MinDocumentSizeKilobytes);
     }
 }

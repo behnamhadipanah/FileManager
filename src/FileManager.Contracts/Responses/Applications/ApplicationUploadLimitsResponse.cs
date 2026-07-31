@@ -1,12 +1,12 @@
-namespace FileManager.Contracts.Requests.Applications;
+namespace FileManager.Contracts.Responses.Applications;
 
 /// <summary>
-/// All min/max size fields are in kilobytes (KB).
+/// Upload size limits for an application. All values are in kilobytes (KB).
 /// </summary>
-public sealed class RegisterApplicationRequest
+public sealed class ApplicationUploadLimitsResponse
 {
+    public long ApplicationId { get; set; }
     public string ApplicationName { get; set; } = string.Empty;
-
     public long MinImageSizeKilobytes { get; set; }
     public long MaxImageSizeKilobytes { get; set; }
     public long MinVideoSizeKilobytes { get; set; }

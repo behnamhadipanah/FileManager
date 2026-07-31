@@ -5,9 +5,9 @@ namespace FileManager.Application.Features.Commands.Applications;
 
 public sealed record RegisterApplicationCommand(
     string ApplicationName,
-    long MinSizeUploadImage,
-    long MaxSizeUploadImage,
-    long MinSizeVideo,
-    long MaxSizeVideo,
-    long MinSizeDcoument,
-    long MaxSizeDcoument) : IRequest<RegisterApplicationResponse>;
+    long MinImageSizeKilobytes,
+    long MaxImageSizeKilobytes,
+    long MinVideoSizeKilobytes,
+    long MaxVideoSizeKilobytes,
+    long MinDocumentSizeKilobytes,
+    long MaxDocumentSizeKilobytes) : IRequest<RegisterApplicationResponse>;

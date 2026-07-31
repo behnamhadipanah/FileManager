@@ -1,4 +1,5 @@
 using FileManager.Domain.Common;
+using FileManager.Domain.Enumerations;
 using FileManager.Domain.Messages;
 using Kootam.Framework.Domain.ValueObjects;
 
@@ -6,87 +7,103 @@ namespace FileManager.Domain.ValueObjects;
 
 public sealed class UploadLimits : BaseValueObject<UploadLimits>
 {
-    public FileSize MinImageSize { get; private set; } = FileSize.Zero;
-    public FileSize MaxImageSize { get; private set; } = FileSize.Zero;
-    public FileSize MinVideoSize { get; private set; } = FileSize.Zero;
-    public FileSize MaxVideoSize { get; private set; } = FileSize.Zero;
-    public FileSize MinDocumentSize { get; private set; } = FileSize.Zero;
-    public FileSize MaxDocumentSize { get; private set; } = FileSize.Zero;
+    public long MinImageSizeKilobytes { get; private set; }
+    public long MaxImageSizeKilobytes { get; private set; }
+    public long MinVideoSizeKilobytes { get; private set; }
+    public long MaxVideoSizeKilobytes { get; private set; }
+    public long MinDocumentSizeKilobytes { get; private set; }
+    public long MaxDocumentSizeKilobytes { get; private set; }
+
+    public FileSize MinImageSize => FileSize.FromKilobytes(MinImageSizeKilobytes);
+    public FileSize MaxImageSize => FileSize.FromKilobytes(MaxImageSizeKilobytes);
+    public FileSize MinVideoSize => FileSize.FromKilobytes(MinVideoSizeKilobytes);
+    public FileSize MaxVideoSize => FileSize.FromKilobytes(MaxVideoSizeKilobytes);
+    public FileSize MinDocumentSize => FileSize.FromKilobytes(MinDocumentSizeKilobytes);
+    public FileSize MaxDocumentSize => FileSize.FromKilobytes(MaxDocumentSizeKilobytes);
 
     private UploadLimits() { }
 
     private UploadLimits(
-        FileSize minImageSize,
-        FileSize maxImageSize,
-        FileSize minVideoSize,
-        FileSize maxVideoSize,
-        FileSize minDocumentSize,
-        FileSize maxDocumentSize)
+        long minImageSizeKilobytes,
+        long maxImageSizeKilobytes,
+        long minVideoSizeKilobytes,
+        long maxVideoSizeKilobytes,
+        long minDocumentSizeKilobytes,
+        long maxDocumentSizeKilobytes)
     {
-        EnsureRange(minImageSize, maxImageSize, nameof(minImageSize));
-        EnsureRange(minVideoSize, maxVideoSize, nameof(minVideoSize));
-        EnsureRange(minDocumentSize, maxDocumentSize, nameof(minDocumentSize));
+        EnsureRange(minImageSizeKilobytes, maxImageSizeKilobytes, nameof(minImageSizeKilobytes));
+        EnsureRange(minVideoSizeKilobytes, maxVideoSizeKilobytes, nameof(minVideoSizeKilobytes));
+        EnsureRange(minDocumentSizeKilobytes, maxDocumentSizeKilobytes, nameof(minDocumentSizeKilobytes));
 
-        MinImageSize = minImageSize;
-        MaxImageSize = maxImageSize;
-        MinVideoSize = minVideoSize;
-        MaxVideoSize = maxVideoSize;
-        MinDocumentSize = minDocumentSize;
-        MaxDocumentSize = maxDocumentSize;
+        MinImageSizeKilobytes = minImageSizeKilobytes;
+        MaxImageSizeKilobytes = maxImageSizeKilobytes;
+        MinVideoSizeKilobytes = minVideoSizeKilobytes;
+        MaxVideoSizeKilobytes = maxVideoSizeKilobytes;
+        MinDocumentSizeKilobytes = minDocumentSizeKilobytes;
+        MaxDocumentSizeKilobytes = maxDocumentSizeKilobytes;
     }
 
     public static UploadLimits Create(
-        long minImageKilobytes,
-        long maxImageKilobytes,
-        long minVideoKilobytes,
-        long maxVideoKilobytes,
-        long minDocumentKilobytes,
-        long maxDocumentKilobytes) =>
+        long minImageSizeKilobytes,
+        long maxImageSizeKilobytes,
+        long minVideoSizeKilobytes,
+        long maxVideoSizeKilobytes,
+        long minDocumentSizeKilobytes,
+        long maxDocumentSizeKilobytes) =>
         new(
-            FileSize.FromKilobytes(minImageKilobytes),
-            FileSize.FromKilobytes(maxImageKilobytes),
-            FileSize.FromKilobytes(minVideoKilobytes),
-            FileSize.FromKilobytes(maxVideoKilobytes),
-            FileSize.FromKilobytes(minDocumentKilobytes),
-            FileSize.FromKilobytes(maxDocumentKilobytes));
+            minImageSizeKilobytes,
+            maxImageSizeKilobytes,
+            minVideoSizeKilobytes,
+            maxVideoSizeKilobytes,
+            minDocumentSizeKilobytes,
+            maxDocumentSizeKilobytes);
 
     public static UploadLimits FromPersistence(
-        long minImageBytes,
-        long maxImageBytes,
-        long minVideoBytes,
-        long maxVideoBytes,
-        long minDocumentBytes,
-        long maxDocumentBytes) =>
+        long minImageSizeKilobytes,
+        long maxImageSizeKilobytes,
+        long minVideoSizeKilobytes,
+        long maxVideoSizeKilobytes,
+        long minDocumentSizeKilobytes,
+        long maxDocumentSizeKilobytes) =>
         new(
-            FileSize.FromBytes(minImageBytes),
-            FileSize.FromBytes(maxImageBytes),
-            FileSize.FromBytes(minVideoBytes),
-            FileSize.FromBytes(maxVideoBytes),
-            FileSize.FromBytes(minDocumentBytes),
-            FileSize.FromBytes(maxDocumentBytes));
+            minImageSizeKilobytes,
+            maxImageSizeKilobytes,
+            minVideoSizeKilobytes,
+            maxVideoSizeKilobytes,
+            minDocumentSizeKilobytes,
+            maxDocumentSizeKilobytes);
 
-    public (FileSize Min, FileSize Max) GetLimitsFor(Enumerations.StorageFileType fileType) =>
+    public (FileSize Min, FileSize Max) GetLimitsFor(StorageFileType fileType) =>
         fileType switch
         {
-            Enumerations.StorageFileType.Image => (MinImageSize, MaxImageSize),
-            Enumerations.StorageFileType.Video => (MinVideoSize, MaxVideoSize),
-            Enumerations.StorageFileType.Document => (MinDocumentSize, MaxDocumentSize),
+            StorageFileType.Image => (MinImageSize, MaxImageSize),
+            StorageFileType.Video => (MinVideoSize, MaxVideoSize),
+            StorageFileType.Document => (MinDocumentSize, MaxDocumentSize),
             _ => (FileSize.Zero, FileSize.FromBytes(long.MaxValue))
         };
 
-    private static void EnsureRange(FileSize min, FileSize max, string field)
+    public (long MinKilobytes, long MaxKilobytes) GetKilobyteLimitsFor(StorageFileType fileType) =>
+        fileType switch
+        {
+            StorageFileType.Image => (MinImageSizeKilobytes, MaxImageSizeKilobytes),
+            StorageFileType.Video => (MinVideoSizeKilobytes, MaxVideoSizeKilobytes),
+            StorageFileType.Document => (MinDocumentSizeKilobytes, MaxDocumentSizeKilobytes),
+            _ => (0, long.MaxValue)
+        };
+
+    private static void EnsureRange(long minKilobytes, long maxKilobytes, string field)
     {
-        if (min.Bytes > max.Bytes)
+        if (minKilobytes > maxKilobytes)
             throw new Exceptions.DomainException(DomainMessages.InvalidUploadLimitRange, field);
     }
 
     protected override IEnumerable<object> GetEqualityComponents()
     {
-        yield return MinImageSize;
-        yield return MaxImageSize;
-        yield return MinVideoSize;
-        yield return MaxVideoSize;
-        yield return MinDocumentSize;
-        yield return MaxDocumentSize;
+        yield return MinImageSizeKilobytes;
+        yield return MaxImageSizeKilobytes;
+        yield return MinVideoSizeKilobytes;
+        yield return MaxVideoSizeKilobytes;
+        yield return MinDocumentSizeKilobytes;
+        yield return MaxDocumentSizeKilobytes;
     }
 }

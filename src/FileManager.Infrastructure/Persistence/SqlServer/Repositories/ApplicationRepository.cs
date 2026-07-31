@@ -141,12 +141,12 @@ public sealed class ApplicationRepository(ISqlConnectionFactory connectionFactor
         cmd.Add(Applications.BusinessId, (Guid)application.BusinessId);
         cmd.Add(Applications.ApplicationName, application.ApplicationName);
         cmd.Add(Applications.Token, application.Token.Value);
-        cmd.Add(Applications.MinImageSize, application.UploadLimits.MinImageSize.Bytes);
-        cmd.Add(Applications.MaxImageSize, application.UploadLimits.MaxImageSize.Bytes);
-        cmd.Add(Applications.MinVideoSize, application.UploadLimits.MinVideoSize.Bytes);
-        cmd.Add(Applications.MaxVideoSize, application.UploadLimits.MaxVideoSize.Bytes);
-        cmd.Add(Applications.MinDocumentSize, application.UploadLimits.MinDocumentSize.Bytes);
-        cmd.Add(Applications.MaxDocumentSize, application.UploadLimits.MaxDocumentSize.Bytes);
+        cmd.Add(Applications.MinImageSize, application.UploadLimits.MinImageSizeKilobytes);
+        cmd.Add(Applications.MaxImageSize, application.UploadLimits.MaxImageSizeKilobytes);
+        cmd.Add(Applications.MinVideoSize, application.UploadLimits.MinVideoSizeKilobytes);
+        cmd.Add(Applications.MaxVideoSize, application.UploadLimits.MaxVideoSizeKilobytes);
+        cmd.Add(Applications.MinDocumentSize, application.UploadLimits.MinDocumentSizeKilobytes);
+        cmd.Add(Applications.MaxDocumentSize, application.UploadLimits.MaxDocumentSizeKilobytes);
         cmd.Add(Applications.IsActive, application.IsActive);
         cmd.Add(Applications.CreationTime, application.CreationTime);
         cmd.Add(Applications.CreatorId, application.CreatorId);
@@ -174,12 +174,12 @@ public sealed class ApplicationRepository(ISqlConnectionFactory connectionFactor
 
         cmd.Add(Applications.ApplicationName, application.ApplicationName);
         cmd.Add(Applications.Token, application.Token.Value);
-        cmd.Add(Applications.MinImageSize, application.UploadLimits.MinImageSize.Bytes);
-        cmd.Add(Applications.MaxImageSize, application.UploadLimits.MaxImageSize.Bytes);
-        cmd.Add(Applications.MinVideoSize, application.UploadLimits.MinVideoSize.Bytes);
-        cmd.Add(Applications.MaxVideoSize, application.UploadLimits.MaxVideoSize.Bytes);
-        cmd.Add(Applications.MinDocumentSize, application.UploadLimits.MinDocumentSize.Bytes);
-        cmd.Add(Applications.MaxDocumentSize, application.UploadLimits.MaxDocumentSize.Bytes);
+        cmd.Add(Applications.MinImageSize, application.UploadLimits.MinImageSizeKilobytes);
+        cmd.Add(Applications.MaxImageSize, application.UploadLimits.MaxImageSizeKilobytes);
+        cmd.Add(Applications.MinVideoSize, application.UploadLimits.MinVideoSizeKilobytes);
+        cmd.Add(Applications.MaxVideoSize, application.UploadLimits.MaxVideoSizeKilobytes);
+        cmd.Add(Applications.MinDocumentSize, application.UploadLimits.MinDocumentSizeKilobytes);
+        cmd.Add(Applications.MaxDocumentSize, application.UploadLimits.MaxDocumentSizeKilobytes);
         cmd.Add(Applications.IsActive, application.IsActive);
         cmd.Add(Applications.LastModificationTime, application.LastModificationTime);
         cmd.Add(Applications.LastModifierId, application.LastModifierId);

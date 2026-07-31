@@ -18,7 +18,15 @@ public static class UploadValidationPolicy
     public static void EnsureWithinLimits(UploadLimits limits, StorageFileType fileType, FileSize size)
     {
         var (min, max) = limits.GetLimitsFor(fileType);
+        var (minKilobytes, maxKilobytes) = limits.GetKilobyteLimitsFor(fileType);
         if (!size.IsWithinRange(min, max))
-            throw new Exceptions.DomainException(DomainMessages.FileSizeOutOfRange, fileType.ToString());
+        {
+            throw new Exceptions.DomainException(
+                DomainMessages.FileSizeOutOfRange,
+                fileType.ToString(),
+                minKilobytes.ToString(),
+                maxKilobytes.ToString(),
+                size.ToKilobytes().ToString());
+        }
     }
 }

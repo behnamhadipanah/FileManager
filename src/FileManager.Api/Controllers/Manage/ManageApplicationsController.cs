@@ -20,4 +20,11 @@ public sealed class ManageApplicationsController : BaseCqrsController
     [HttpGet]
     public Task<IActionResult> GetAll()
         => Query<IReadOnlyList<ApplicationMenuItemResponse>>(new GetApplicationsQuery());
+
+    /// <summary>
+    /// Gets min/max upload limits (kilobytes) for images, videos, and documents.
+    /// </summary>
+    [HttpGet("{applicationId:long}/upload-limits")]
+    public Task<IActionResult> GetUploadLimits([FromRoute] long applicationId)
+        => Query<ApplicationUploadLimitsResponse>(new GetApplicationUploadLimitsQuery(applicationId));
 }

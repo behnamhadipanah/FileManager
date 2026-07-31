@@ -1,3 +1,4 @@
+using FileManager.Application.Abstractions;
 using FileManager.Contracts.Responses.Applications;
 using FileManager.Domain.Aggregates.ApplicationAgg;
 using FileManager.Domain.Aggregates.FolderAgg;
@@ -12,7 +13,8 @@ namespace FileManager.Application.Features.Commands.Applications;
 
 public sealed class RegisterApplicationCommandHandler(
     IApplicationRepository applicationRepository,
-    IFolderRepository folderRepository)
+    IFolderRepository folderRepository,
+    IApplicationBucketService bucketService)
     : IRequestHandler<RegisterApplicationCommand, RegisterApplicationResponse>
 {
     public async Task<Result<RegisterApplicationResponse>> Handle(
@@ -24,12 +26,12 @@ public sealed class RegisterApplicationCommandHandler(
         var now = DateTime.UtcNow;
 
         var uploadLimits = UploadLimits.Create(
-            command.MinSizeUploadImage,
-            command.MaxSizeUploadImage,
-            command.MinSizeVideo,
-            command.MaxSizeVideo,
-            command.MinSizeDcoument,
-            command.MaxSizeDcoument);
+            command.MinImageSizeKilobytes,
+            command.MaxImageSizeKilobytes,
+            command.MinVideoSizeKilobytes,
+            command.MaxVideoSizeKilobytes,
+            command.MinDocumentSizeKilobytes,
+            command.MaxDocumentSizeKilobytes);
 
         var application = RegisteredApplication.Register(
             command.ApplicationName,
@@ -38,6 +40,8 @@ public sealed class RegisterApplicationCommandHandler(
             now);
 
         await applicationRepository.InsertAsync(application, cancellationToken);
+
+        await bucketService.EnsureApplicationBucketsAsync(application.ApplicationName, cancellationToken);
 
         var rootFolder = Folder.CreateRoot(application.Id, now);
         await folderRepository.InsertAsync(rootFolder, cancellationToken);

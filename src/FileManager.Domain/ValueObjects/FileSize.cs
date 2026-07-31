@@ -22,6 +22,12 @@ public sealed class FileSize : BaseValueObject<FileSize>
 
     public static FileSize Zero => new(0);
 
+    /// <summary>Exact kilobytes when size was created from whole KB values.</summary>
+    public long Kilobytes => Bytes / 1024;
+
+    /// <summary>Rounds up to the next kilobyte for uploaded file sizes.</summary>
+    public long ToKilobytes() => Bytes == 0 ? 0 : (Bytes + 1023) / 1024;
+
     public bool IsWithinRange(FileSize min, FileSize max) =>
         Bytes >= min.Bytes && Bytes <= max.Bytes;
 
