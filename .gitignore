@@ -1,36 +1,59 @@
-﻿# Build results
-bin/
-obj/
-out/
-
-# Rider / ReSharper / .idea
-.idea/
-*.sln.iml
-
+################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
 # Visual Studio
 .vs/
-*.user
-*.suo
+.vscode/
 
-# NuGet (the ./nugets folder is a checked-in local feed for Kootam.* packages - keep those)
+# JetBrains Rider
+.idea/
+
+# Build Results
+[Bb]in/
+[Oo]bj/
+
+
+# Test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio cache
+*.cache
+*.pdb
+*.ipch
+
+# ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# DotCover
+*.dotCover
+
+# NuGet
 *.nupkg
 *.snupkg
-!/nugets/*.nupkg
 packages/
-.nuget/
 
-# Test results
-[Tt]est[Rr]esult*/
-*.trx
-*.coverage
-*.coveragexml
-
-# OS files
-.DS_Store
-Thumbs.db
+# Publish
+publish/
+wwwroot/dist/
 
 # Logs
 *.log
 
-# Docker volumes / local data
-docker/**/data/
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Rider
+.idea_modules/
+
+# Generated files
+Generated/
