@@ -10,7 +10,7 @@
       <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
       <PackageReference Include="Kootam.Framework.Application" Version="1.0.0" />
       <PackageReference Include="Kootam.Cqrs.Abstractions" Version="1.0.0" />
-      <PackageReference Include="Kootam.Cqrs" Version="1.0.0" />
+      <PackageReference Include="Kootam.Authentication.Abstractions" Version="1.0.0" />
     </ItemGroup>
 
     <ItemGroup>

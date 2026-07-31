@@ -66,6 +66,26 @@ public sealed class ApplicationRepository(ISqlConnectionFactory connectionFactor
         return await reader.ReadAsync(cancellationToken) ? Map(reader) : null;
     }
 
+    public async Task<IReadOnlyList<RegisteredApplication>> GetAllActiveAsync(CancellationToken cancellationToken)
+    {
+        await using var conn = (SqlConnection)connectionFactory.CreateReadConnection();
+        await conn.OpenAsync(cancellationToken);
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = $"""
+            SELECT {SqlSchema.Cols(SelectAll)} FROM {Applications.Table}
+            WHERE {Applications.IsActive.Name} = 1
+            ORDER BY {Applications.ApplicationName.Name}
+            """;
+
+        var results = new List<RegisteredApplication>();
+        await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+            results.Add(Map(reader));
+
+        return results;
+    }
+
     public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken)
     {
         await using var conn = (SqlConnection)connectionFactory.CreateReadConnection();
@@ -170,7 +190,7 @@ public sealed class ApplicationRepository(ISqlConnectionFactory connectionFactor
 
     private static RegisteredApplication Map(SqlDataReader reader)
     {
-        var uploadLimits = UploadLimits.Create(
+        var uploadLimits = UploadLimits.FromPersistence(
             reader.GetInt64(4), reader.GetInt64(5),
             reader.GetInt64(6), reader.GetInt64(7),
             reader.GetInt64(8), reader.GetInt64(9));

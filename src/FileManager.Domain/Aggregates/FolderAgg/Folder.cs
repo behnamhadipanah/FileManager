@@ -27,6 +27,11 @@ public sealed class Folder : AggregateRoot, IMultiTenant<long>, IMultiTenantEnti
 
     private Folder() { }
 
+    public const string RootFolderName = "Root";
+
+    public static Folder CreateRoot(long applicationId, DateTime now, long creatorId = 0) =>
+        Create(applicationId, FileName.FromString(RootFolderName), parentFolderId: null, now, creatorId);
+
     public static Folder Create(
         long applicationId,
         FileName name,

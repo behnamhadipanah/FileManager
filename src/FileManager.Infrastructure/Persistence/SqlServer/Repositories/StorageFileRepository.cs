@@ -18,9 +18,9 @@ public sealed class StorageFileRepository(ISqlConnectionFactory connectionFactor
         StorageFiles.Id, StorageFiles.BusinessId, StorageFiles.ApplicationId, StorageFiles.ParentFolderId,
         StorageFiles.Name, StorageFiles.MimeType, StorageFiles.SizeBytes, StorageFiles.ContentHash,
         StorageFiles.ObjectKey, StorageFiles.ThumbnailObjectKey, StorageFiles.Provider, StorageFiles.FileType,
-        StorageFiles.ThumbnailStatus, StorageFiles.ConversionStatus, StorageFiles.OcrStatus, StorageFiles.MetadataJson,
-        StorageFiles.IsDeleted, StorageFiles.DeletionTime, StorageFiles.CreationTime, StorageFiles.CreatorId,
-        StorageFiles.LastModificationTime, StorageFiles.LastModifierId
+        StorageFiles.ThumbnailStatus, StorageFiles.ConversionStatus, StorageFiles.UploadStatus, StorageFiles.OcrStatus,
+        StorageFiles.MetadataJson, StorageFiles.IsDeleted, StorageFiles.DeletionTime, StorageFiles.CreationTime,
+        StorageFiles.CreatorId, StorageFiles.LastModificationTime, StorageFiles.LastModifierId
     ];
 
     public async Task<StorageFile?> GetAsync(long applicationId, long id, CancellationToken cancellationToken)
@@ -68,9 +68,11 @@ public sealed class StorageFileRepository(ISqlConnectionFactory connectionFactor
             WHERE {StorageFiles.ApplicationId.Name} = {StorageFiles.ApplicationId.Parameter}
               AND {StorageFiles.ContentHash.Name} = {StorageFiles.ContentHash.Parameter}
               AND {StorageFiles.IsDeleted.Name} = 0
+              AND {StorageFiles.UploadStatus.Name} = {StorageFiles.UploadStatus.Parameter}
             """;
         cmd.Add(StorageFiles.ApplicationId, applicationId);
         cmd.Add(StorageFiles.ContentHash, contentHash.Value);
+        cmd.Add(StorageFiles.UploadStatus, (int)UploadStatus.Completed);
 
         await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
         return await reader.ReadAsync(cancellationToken) ? Map(reader) : null;
@@ -92,6 +94,28 @@ public sealed class StorageFileRepository(ISqlConnectionFactory connectionFactor
         return await cmd.ExecuteScalarAsync(cancellationToken) is not null;
     }
 
+    public async Task<bool> ExistsByNameAsync(long applicationId, long? parentFolderId, string name, CancellationToken cancellationToken)
+    {
+        await using var conn = (SqlConnection)connectionFactory.CreateReadConnection();
+        await conn.OpenAsync(cancellationToken);
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = $"""
+            SELECT 1 FROM {StorageFiles.Table}
+            WHERE {StorageFiles.ApplicationId.Name} = {StorageFiles.ApplicationId.Parameter}
+              AND {StorageFiles.Name.Name} = {StorageFiles.Name.Parameter}
+              AND {StorageFiles.IsDeleted.Name} = 0
+              AND {StorageFiles.UploadStatus.Name} <> {StorageFiles.UploadStatus.Parameter}
+              AND (({StorageFiles.ParentFolderId.Name} IS NULL AND {StorageFiles.ParentFolderId.Parameter} IS NULL) OR {StorageFiles.ParentFolderId.Name} = {StorageFiles.ParentFolderId.Parameter})
+            """;
+        cmd.Add(StorageFiles.ApplicationId, applicationId);
+        cmd.Add(StorageFiles.Name, name);
+        cmd.Add(StorageFiles.UploadStatus, (int)UploadStatus.Failed);
+        cmd.Add(StorageFiles.ParentFolderId, parentFolderId);
+
+        return await cmd.ExecuteScalarAsync(cancellationToken) is not null;
+    }
+
     public async Task InsertAsync(StorageFile file, CancellationToken cancellationToken)
     {
         await using var conn = (SqlConnection)connectionFactory.CreateWriteConnection();
@@ -103,15 +127,15 @@ public sealed class StorageFileRepository(ISqlConnectionFactory connectionFactor
                 ({StorageFiles.BusinessId.Name}, {StorageFiles.ApplicationId.Name}, {StorageFiles.ParentFolderId.Name},
                  {StorageFiles.Name.Name}, {StorageFiles.MimeType.Name}, {StorageFiles.SizeBytes.Name}, {StorageFiles.ContentHash.Name},
                  {StorageFiles.ObjectKey.Name}, {StorageFiles.ThumbnailObjectKey.Name}, {StorageFiles.Provider.Name}, {StorageFiles.FileType.Name},
-                 {StorageFiles.ThumbnailStatus.Name}, {StorageFiles.ConversionStatus.Name}, {StorageFiles.OcrStatus.Name}, {StorageFiles.MetadataJson.Name},
-                 {StorageFiles.IsDeleted.Name}, {StorageFiles.CreationTime.Name}, {StorageFiles.CreatorId.Name})
+                 {StorageFiles.ThumbnailStatus.Name}, {StorageFiles.ConversionStatus.Name}, {StorageFiles.UploadStatus.Name}, {StorageFiles.OcrStatus.Name},
+                 {StorageFiles.MetadataJson.Name}, {StorageFiles.IsDeleted.Name}, {StorageFiles.CreationTime.Name}, {StorageFiles.CreatorId.Name})
             OUTPUT INSERTED.{StorageFiles.Id.Name}
             VALUES
                 ({StorageFiles.BusinessId.Parameter}, {StorageFiles.ApplicationId.Parameter}, {StorageFiles.ParentFolderId.Parameter},
                  {StorageFiles.Name.Parameter}, {StorageFiles.MimeType.Parameter}, {StorageFiles.SizeBytes.Parameter}, {StorageFiles.ContentHash.Parameter},
                  {StorageFiles.ObjectKey.Parameter}, {StorageFiles.ThumbnailObjectKey.Parameter}, {StorageFiles.Provider.Parameter}, {StorageFiles.FileType.Parameter},
-                 {StorageFiles.ThumbnailStatus.Parameter}, {StorageFiles.ConversionStatus.Parameter}, {StorageFiles.OcrStatus.Parameter}, {StorageFiles.MetadataJson.Parameter},
-                 {StorageFiles.IsDeleted.Parameter}, {StorageFiles.CreationTime.Parameter}, {StorageFiles.CreatorId.Parameter})
+                 {StorageFiles.ThumbnailStatus.Parameter}, {StorageFiles.ConversionStatus.Parameter}, {StorageFiles.UploadStatus.Parameter}, {StorageFiles.OcrStatus.Parameter},
+                 {StorageFiles.MetadataJson.Parameter}, {StorageFiles.IsDeleted.Parameter}, {StorageFiles.CreationTime.Parameter}, {StorageFiles.CreatorId.Parameter})
             """;
 
         cmd.Add(StorageFiles.BusinessId, (Guid)file.BusinessId);
@@ -127,6 +151,7 @@ public sealed class StorageFileRepository(ISqlConnectionFactory connectionFactor
         cmd.Add(StorageFiles.FileType, (int)file.FileType);
         cmd.Add(StorageFiles.ThumbnailStatus, (int)file.ThumbnailStatus);
         cmd.Add(StorageFiles.ConversionStatus, (int)file.ConversionStatus);
+        cmd.Add(StorageFiles.UploadStatus, (int)file.UploadStatus);
         cmd.Add(StorageFiles.OcrStatus, (int)file.OcrStatus);
         cmd.Add(StorageFiles.MetadataJson, SerializeMetadata(file.Metadata));
         cmd.Add(StorageFiles.IsDeleted, file.IsDeleted);
@@ -146,17 +171,25 @@ public sealed class StorageFileRepository(ISqlConnectionFactory connectionFactor
         cmd.CommandText = $"""
             UPDATE {StorageFiles.Table}
             SET {SqlSchema.SetClause(
-                StorageFiles.ParentFolderId, StorageFiles.Name, StorageFiles.ThumbnailObjectKey,
-                StorageFiles.ThumbnailStatus, StorageFiles.ConversionStatus, StorageFiles.OcrStatus, StorageFiles.MetadataJson,
-                StorageFiles.IsDeleted, StorageFiles.DeletionTime, StorageFiles.LastModificationTime, StorageFiles.LastModifierId)}
+                StorageFiles.ParentFolderId, StorageFiles.Name, StorageFiles.MimeType, StorageFiles.SizeBytes,
+                StorageFiles.ContentHash, StorageFiles.ObjectKey, StorageFiles.ThumbnailObjectKey, StorageFiles.FileType,
+                StorageFiles.ThumbnailStatus, StorageFiles.ConversionStatus, StorageFiles.UploadStatus, StorageFiles.OcrStatus,
+                StorageFiles.MetadataJson, StorageFiles.IsDeleted, StorageFiles.DeletionTime,
+                StorageFiles.LastModificationTime, StorageFiles.LastModifierId)}
             WHERE {StorageFiles.Id.Name} = {StorageFiles.Id.Parameter} AND {StorageFiles.ApplicationId.Name} = {StorageFiles.ApplicationId.Parameter}
             """;
 
         cmd.Add(StorageFiles.ParentFolderId, file.ParentFolderId);
         cmd.Add(StorageFiles.Name, file.Name.Value);
+        cmd.Add(StorageFiles.MimeType, file.MimeType.Value);
+        cmd.Add(StorageFiles.SizeBytes, file.Size.Bytes);
+        cmd.Add(StorageFiles.ContentHash, file.ContentHash.Value);
+        cmd.Add(StorageFiles.ObjectKey, (string)file.ObjectKey);
         cmd.Add(StorageFiles.ThumbnailObjectKey, file.ThumbnailObjectKey is null ? null : (string)file.ThumbnailObjectKey);
+        cmd.Add(StorageFiles.FileType, (int)file.FileType);
         cmd.Add(StorageFiles.ThumbnailStatus, (int)file.ThumbnailStatus);
         cmd.Add(StorageFiles.ConversionStatus, (int)file.ConversionStatus);
+        cmd.Add(StorageFiles.UploadStatus, (int)file.UploadStatus);
         cmd.Add(StorageFiles.OcrStatus, (int)file.OcrStatus);
         cmd.Add(StorageFiles.MetadataJson, SerializeMetadata(file.Metadata));
         cmd.Add(StorageFiles.IsDeleted, file.IsDeleted);
@@ -209,12 +242,13 @@ public sealed class StorageFileRepository(ISqlConnectionFactory connectionFactor
             fileType: (StorageFileType)reader.GetInt32(11),
             thumbnailStatus: (ThumbnailStatus)reader.GetInt32(12),
             conversionStatus: (ConversionStatus)reader.GetInt32(13),
-            ocrStatus: (OcrStatus)reader.GetInt32(14),
-            metadata: DeserializeMetadata(reader.NullableString(15)),
-            isDeleted: reader.GetBoolean(16),
-            deletionTime: reader.NullableDateTime(17),
-            creationTime: reader.GetDateTime(18),
-            creatorId: reader.GetInt64(19),
-            lastModificationTime: reader.NullableDateTime(20),
-            lastModifierId: reader.NullableLong(21));
+            uploadStatus: (UploadStatus)reader.GetInt32(14),
+            ocrStatus: (OcrStatus)reader.GetInt32(15),
+            metadata: DeserializeMetadata(reader.NullableString(16)),
+            isDeleted: reader.GetBoolean(17),
+            deletionTime: reader.NullableDateTime(18),
+            creationTime: reader.GetDateTime(19),
+            creatorId: reader.GetInt64(20),
+            lastModificationTime: reader.NullableDateTime(21),
+            lastModifierId: reader.NullableLong(22));
 }

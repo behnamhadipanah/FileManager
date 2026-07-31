@@ -1,0 +1,9 @@
+using FileManager.Contracts.Responses.Folders;
+using Kootam.Cqrs.Abstractions.Queries;
+
+namespace FileManager.Application.Features.Queries.Folders;
+
+public sealed record GetFolderQuery(
+    long ApplicationId,
+    Guid FolderBusinessId,
+    bool? IsDeleted) : IQuery<FolderResponse>;

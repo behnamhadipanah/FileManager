@@ -1,6 +1,10 @@
-IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'Applications')
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.tables t
+    INNER JOIN sys.schemas s ON t.schema_id = s.schema_id
+    WHERE s.name = '{{Schema}}' AND t.name = 'Applications')
 BEGIN
-    CREATE TABLE Applications
+    CREATE TABLE [{{Schema}}].[Applications]
     (
         Id                   BIGINT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Applications PRIMARY KEY,
         BusinessId           UNIQUEIDENTIFIER      NOT NULL,
@@ -19,7 +23,7 @@ BEGIN
         LastModifierId       BIGINT                NULL
     );
 
-    CREATE UNIQUE INDEX UX_Applications_BusinessId ON Applications (BusinessId);
-    CREATE UNIQUE INDEX UX_Applications_ApplicationName ON Applications (ApplicationName);
-    CREATE UNIQUE INDEX UX_Applications_Token ON Applications (Token);
+    CREATE UNIQUE INDEX UX_Applications_BusinessId ON [{{Schema}}].[Applications] (BusinessId);
+    CREATE UNIQUE INDEX UX_Applications_ApplicationName ON [{{Schema}}].[Applications] (ApplicationName);
+    CREATE UNIQUE INDEX UX_Applications_Token ON [{{Schema}}].[Applications] (Token);
 END

@@ -5,7 +5,12 @@ namespace FileManager.Infrastructure.Persistence.SqlServer.Tables;
 
 internal static class TrashItems
 {
-    public const string Table = "TrashItems";
+    public const string Schema = SqlTableDefinitions.Schema;
+    public const string TableName = "TrashItems";
+    public const string Alias = "ti";
+
+    public static string Table => SqlTableDefinitions.Qualify(TableName);
+    public static string From => SqlTableDefinitions.From(TableName, Alias);
 
     public static readonly SqlColumn<long> Id = new("Id", SqlDbType.BigInt);
     public static readonly SqlColumn<Guid> BusinessId = new("BusinessId", SqlDbType.UniqueIdentifier);

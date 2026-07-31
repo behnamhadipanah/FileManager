@@ -47,6 +47,7 @@ public sealed class TrashRepository(ISqlConnectionFactory connectionFactory) : I
               AND {TrashItems.ItemType.Name} = {TrashItems.ItemType.Parameter}
               AND {TrashItems.ItemId.Name} = {TrashItems.ItemId.Parameter}
               AND {TrashItems.IsPurged.Name} = 0
+              AND {TrashItems.IsRestored.Name} = 0
             """;
         cmd.Add(TrashItems.ApplicationId, applicationId);
         cmd.Add(TrashItems.ItemType, (int)itemType);

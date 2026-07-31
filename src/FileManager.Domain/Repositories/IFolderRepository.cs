@@ -7,9 +7,11 @@ public interface IFolderRepository
 {
     Task<Folder?> GetAsync(long applicationId, long id, CancellationToken cancellationToken);
     Task<Folder?> GetByBusinessIdAsync(long applicationId, BusinessId businessId, CancellationToken cancellationToken);
+    Task<Folder?> GetRootAsync(long applicationId, CancellationToken cancellationToken);
     Task<bool> ExistsAsync(long applicationId, long id, CancellationToken cancellationToken);
     Task<bool> ExistsByNameAsync(long applicationId, long? parentFolderId, string name, CancellationToken cancellationToken);
     Task<bool> HasChildrenAsync(long applicationId, long folderId, CancellationToken cancellationToken);
     Task InsertAsync(Folder folder, CancellationToken cancellationToken);
     Task UpdateAsync(Folder folder, CancellationToken cancellationToken);
+    Task DeleteAsync(long applicationId, long id, CancellationToken cancellationToken);
 }

@@ -47,6 +47,7 @@ wwwroot/dist/
 
 # Logs
 *.log
+.run/
 
 # OS Files
 .DS_Store

@@ -8,6 +8,7 @@ public interface IApplicationRepository
     Task<RegisteredApplication?> GetAsync(long id, CancellationToken cancellationToken);
     Task<RegisteredApplication?> GetByBusinessIdAsync(BusinessId businessId, CancellationToken cancellationToken);
     Task<RegisteredApplication?> GetByTokenAsync(string token, CancellationToken cancellationToken);
+    Task<IReadOnlyList<RegisteredApplication>> GetAllActiveAsync(CancellationToken cancellationToken);
     Task<bool> ExistsAsync(long id, CancellationToken cancellationToken);
     Task<bool> ExistsByNameAsync(string applicationName, CancellationToken cancellationToken);
     Task InsertAsync(RegisteredApplication application, CancellationToken cancellationToken);

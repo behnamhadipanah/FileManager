@@ -10,6 +10,8 @@ namespace FileManager.Api.Controllers;
 /// Registers applications that are allowed to store files in the file manager.
 /// Each application is isolated from every other (multi-tenant by ApplicationId).
 /// </summary>
+[ApiController]
+[Route("api/[controller]")]
 public sealed class ApplicationsController : BaseCqrsController
 {
     [HttpPost("register")]

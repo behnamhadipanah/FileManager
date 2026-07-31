@@ -26,6 +26,7 @@ public sealed class StorageFile : AggregateRoot, IMultiTenant<long>, IMultiTenan
     public StorageFileType FileType { get; private set; }
     public ThumbnailStatus ThumbnailStatus { get; private set; } = ThumbnailStatus.None;
     public ConversionStatus ConversionStatus { get; private set; } = ConversionStatus.None;
+    public UploadStatus UploadStatus { get; private set; } = UploadStatus.Completed;
     public OcrStatus OcrStatus { get; private set; } = OcrStatus.None;
     public FileMetadata Metadata { get; private set; } = FileMetadata.Empty();
     public bool IsDeleted { get; private set; }
@@ -78,6 +79,43 @@ public sealed class StorageFile : AggregateRoot, IMultiTenant<long>, IMultiTenan
         return file;
     }
 
+    public static StorageFile CreatePendingUpload(
+        long applicationId,
+        long? parentFolderId,
+        FileName name,
+        MimeType mimeType,
+        FileSize size,
+        StorageObjectKey stagingObjectKey,
+        StorageProvider provider,
+        StorageFileType fileType,
+        DateTime now,
+        long creatorId = 0)
+    {
+        Guard.Positive(applicationId, nameof(applicationId));
+
+        var file = new StorageFile
+        {
+            ApplicationId = applicationId,
+            ParentFolderId = parentFolderId,
+            Name = name,
+            MimeType = mimeType,
+            Size = size,
+            ContentHash = ContentHash.FromString(PendingContentHashValue),
+            ObjectKey = stagingObjectKey,
+            Provider = provider,
+            FileType = fileType,
+            UploadStatus = UploadStatus.Pending,
+            ThumbnailStatus = ThumbnailStatus.None,
+            ConversionStatus = ConversionStatus.None
+        };
+
+        file.SetCreated(now);
+        file.SetCreator(creatorId);
+        return file;
+    }
+
+    public const string PendingContentHashValue = "pending";
+
     /// <summary>
     /// Rehydrates an aggregate from persisted state without raising domain events.
     /// Used exclusively by Infrastructure repositories (see AssemblyInfo.cs InternalsVisibleTo).
@@ -97,6 +135,7 @@ public sealed class StorageFile : AggregateRoot, IMultiTenant<long>, IMultiTenan
         StorageFileType fileType,
         ThumbnailStatus thumbnailStatus,
         ConversionStatus conversionStatus,
+        UploadStatus uploadStatus,
         OcrStatus ocrStatus,
         FileMetadata metadata,
         bool isDeleted,
@@ -121,6 +160,7 @@ public sealed class StorageFile : AggregateRoot, IMultiTenant<long>, IMultiTenan
             FileType = fileType,
             ThumbnailStatus = thumbnailStatus,
             ConversionStatus = conversionStatus,
+            UploadStatus = uploadStatus,
             OcrStatus = ocrStatus,
             Metadata = metadata,
             IsDeleted = isDeleted,
@@ -179,6 +219,47 @@ public sealed class StorageFile : AggregateRoot, IMultiTenant<long>, IMultiTenan
     public void StartConversion() => ConversionStatus = ConversionStatus.Processing;
     public void CompleteConversion() => ConversionStatus = ConversionStatus.Completed;
     public void FailConversion() => ConversionStatus = ConversionStatus.Failed;
+
+    public void StartUploadProcessing(DateTime now)
+    {
+        UploadStatus = UploadStatus.Processing;
+        SetLastModification(now);
+    }
+
+    public void CompleteUpload(
+        FileName name,
+        MimeType mimeType,
+        FileSize size,
+        ContentHash contentHash,
+        StorageObjectKey objectKey,
+        StorageFileType fileType,
+        bool converted,
+        DateTime now)
+    {
+        Name = name;
+        MimeType = mimeType;
+        Size = size;
+        ContentHash = contentHash;
+        ObjectKey = objectKey;
+        FileType = fileType;
+        UploadStatus = UploadStatus.Completed;
+        ThumbnailStatus = fileType is StorageFileType.Image or StorageFileType.Video
+            ? ThumbnailStatus.Pending
+            : ThumbnailStatus.None;
+
+        if (converted)
+            ConversionStatus = ConversionStatus.Completed;
+
+        SetLastModification(now);
+        Apply(new StorageFileUploadedDomainEvent(
+            BusinessId, ApplicationId, name.Value, mimeType.Value, size.Bytes, fileType, ParentFolderId));
+    }
+
+    public void FailUpload(DateTime now)
+    {
+        UploadStatus = UploadStatus.Failed;
+        SetLastModification(now);
+    }
 
     public void StartOcr() => OcrStatus = OcrStatus.Processing;
     public void CompleteOcr() => OcrStatus = OcrStatus.Completed;

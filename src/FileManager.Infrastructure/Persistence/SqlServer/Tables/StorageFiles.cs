@@ -5,7 +5,12 @@ namespace FileManager.Infrastructure.Persistence.SqlServer.Tables;
 
 internal static class StorageFiles
 {
-    public const string Table = "StorageFiles";
+    public const string Schema = SqlTableDefinitions.Schema;
+    public const string TableName = "StorageFiles";
+    public const string Alias = "sf";
+
+    public static string Table => SqlTableDefinitions.Qualify(TableName);
+    public static string From => SqlTableDefinitions.From(TableName, Alias);
 
     public static readonly SqlColumn<long> Id = new("Id", SqlDbType.BigInt);
     public static readonly SqlColumn<Guid> BusinessId = new("BusinessId", SqlDbType.UniqueIdentifier);
@@ -21,6 +26,7 @@ internal static class StorageFiles
     public static readonly SqlColumn<int> FileType = new("FileType", SqlDbType.Int);
     public static readonly SqlColumn<int> ThumbnailStatus = new("ThumbnailStatus", SqlDbType.Int);
     public static readonly SqlColumn<int> ConversionStatus = new("ConversionStatus", SqlDbType.Int);
+    public static readonly SqlColumn<int> UploadStatus = new("UploadStatus", SqlDbType.Int);
     public static readonly SqlColumn<int> OcrStatus = new("OcrStatus", SqlDbType.Int);
     public static readonly SqlColumn<string?> MetadataJson = new("MetadataJson", SqlDbType.NVarChar, -1);
     public static readonly SqlColumn<bool> IsDeleted = new("IsDeleted", SqlDbType.Bit);

@@ -28,6 +28,9 @@ public sealed class MimeType : BaseValueObject<MimeType>
         || Value.StartsWith("application/vnd.", StringComparison.Ordinal)
         || Value.StartsWith("text/", StringComparison.Ordinal);
 
+    public bool IsSvg() =>
+        Value.Equals("image/svg+xml", StringComparison.Ordinal);
+
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return Value;

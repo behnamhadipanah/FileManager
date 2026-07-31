@@ -7,9 +7,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Kootam.Authentication.Jwt" Version="1.0.0" />
         <PackageReference Include="Kootam.Framework.Presentations" Version="1.0.0" />
         <PackageReference Include="Kootam.Utilities.ScalarRegistration" Version="1.0.0" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
     </ItemGroup>
 
     <ItemGroup>

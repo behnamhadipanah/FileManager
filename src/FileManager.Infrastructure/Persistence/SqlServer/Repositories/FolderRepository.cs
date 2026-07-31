@@ -52,6 +52,26 @@ public sealed class FolderRepository(ISqlConnectionFactory connectionFactory) : 
         return await reader.ReadAsync(cancellationToken) ? Map(reader) : null;
     }
 
+    public async Task<Folder?> GetRootAsync(long applicationId, CancellationToken cancellationToken)
+    {
+        await using var conn = (SqlConnection)connectionFactory.CreateReadConnection();
+        await conn.OpenAsync(cancellationToken);
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = $"""
+            SELECT {SqlSchema.Cols(SelectAll)} FROM {Folders.Table}
+            WHERE {Folders.ApplicationId.Name} = {Folders.ApplicationId.Parameter}
+              AND {Folders.ParentFolderId.Name} IS NULL
+              AND {Folders.Name.Name} = {Folders.Name.Parameter}
+              AND {Folders.IsDeleted.Name} = 0
+            """;
+        cmd.Add(Folders.ApplicationId, applicationId);
+        cmd.Add(Folders.Name, Folder.RootFolderName);
+
+        await using var reader = await cmd.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken) ? Map(reader) : null;
+    }
+
     public async Task<bool> ExistsAsync(long applicationId, long id, CancellationToken cancellationToken)
     {
         await using var conn = (SqlConnection)connectionFactory.CreateReadConnection();
@@ -95,11 +115,15 @@ public sealed class FolderRepository(ISqlConnectionFactory connectionFactory) : 
 
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = $"""
-            SELECT 1 FROM {Folders.Table}
-            WHERE {Folders.ApplicationId.Name} = {Folders.ApplicationId.Parameter} AND {Folders.ParentFolderId.Name} = {Folders.ParentFolderId.Parameter} AND {Folders.IsDeleted.Name} = 0
+            SELECT 1 FROM {Folders.From}
+            WHERE {Folders.Alias}.{Folders.ApplicationId.Name} = {Folders.ApplicationId.Parameter}
+              AND {Folders.Alias}.{Folders.ParentFolderId.Name} = {Folders.ParentFolderId.Parameter}
+              AND {Folders.Alias}.{Folders.IsDeleted.Name} = 0
             UNION ALL
-            SELECT 1 FROM {StorageFiles.Table}
-            WHERE {StorageFiles.ApplicationId.Name} = {StorageFiles.ApplicationId.Parameter} AND {StorageFiles.ParentFolderId.Name} = {StorageFiles.ParentFolderId.Parameter} AND {StorageFiles.IsDeleted.Name} = 0
+            SELECT 1 FROM {StorageFiles.From}
+            WHERE {StorageFiles.Alias}.{StorageFiles.ApplicationId.Name} = {StorageFiles.ApplicationId.Parameter}
+              AND {StorageFiles.Alias}.{StorageFiles.ParentFolderId.Name} = {StorageFiles.ParentFolderId.Parameter}
+              AND {StorageFiles.Alias}.{StorageFiles.IsDeleted.Name} = 0
             """;
         // Folders.ApplicationId/ParentFolderId and StorageFiles.ApplicationId/ParentFolderId share
         // the same column names, so the same @ApplicationId/@ParentFolderId parameters satisfy both
@@ -160,6 +184,22 @@ public sealed class FolderRepository(ISqlConnectionFactory connectionFactory) : 
         cmd.Add(Folders.LastModifierId, folder.LastModifierId);
         cmd.Add(Folders.Id, folder.Id);
         cmd.Add(Folders.ApplicationId, folder.ApplicationId);
+
+        await cmd.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(long applicationId, long id, CancellationToken cancellationToken)
+    {
+        await using var conn = (SqlConnection)connectionFactory.CreateWriteConnection();
+        await conn.OpenAsync(cancellationToken);
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = $"""
+            DELETE FROM {Folders.Table}
+            WHERE {Folders.Id.Name} = {Folders.Id.Parameter} AND {Folders.ApplicationId.Name} = {Folders.ApplicationId.Parameter}
+            """;
+        cmd.Add(Folders.Id, id);
+        cmd.Add(Folders.ApplicationId, applicationId);
 
         await cmd.ExecuteNonQueryAsync(cancellationToken);
     }

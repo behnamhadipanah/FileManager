@@ -18,6 +18,8 @@ public sealed class FileSize : BaseValueObject<FileSize>
 
     public static FileSize FromBytes(long bytes) => new(bytes);
 
+    public static FileSize FromKilobytes(long kilobytes) => new(kilobytes * 1024);
+
     public static FileSize Zero => new(0);
 
     public bool IsWithinRange(FileSize min, FileSize max) =>

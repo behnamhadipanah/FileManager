@@ -36,6 +36,21 @@ public sealed class UploadLimits : BaseValueObject<UploadLimits>
     }
 
     public static UploadLimits Create(
+        long minImageKilobytes,
+        long maxImageKilobytes,
+        long minVideoKilobytes,
+        long maxVideoKilobytes,
+        long minDocumentKilobytes,
+        long maxDocumentKilobytes) =>
+        new(
+            FileSize.FromKilobytes(minImageKilobytes),
+            FileSize.FromKilobytes(maxImageKilobytes),
+            FileSize.FromKilobytes(minVideoKilobytes),
+            FileSize.FromKilobytes(maxVideoKilobytes),
+            FileSize.FromKilobytes(minDocumentKilobytes),
+            FileSize.FromKilobytes(maxDocumentKilobytes));
+
+    public static UploadLimits FromPersistence(
         long minImageBytes,
         long maxImageBytes,
         long minVideoBytes,

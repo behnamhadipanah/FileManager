@@ -23,7 +23,7 @@ public sealed class ApplicationToken : BaseValueObject<ApplicationToken>
     {
         var token = Convert.ToBase64String(Guid.NewGuid().ToByteArray())
             + Convert.ToBase64String(Guid.NewGuid().ToByteArray());
-        return new ApplicationToken(token[..64]);
+        return new ApplicationToken(token[..32]);
     }
 
     protected override IEnumerable<object> GetEqualityComponents()

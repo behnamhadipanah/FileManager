@@ -2,8 +2,10 @@ using Amazon.S3;
 using FileManager.Application.Abstractions;
 using FileManager.Application.Behaviors;
 using FileManager.Application.Features.Commands.Applications;
+using FileManager.Application.Services;
 using FileManager.Domain.Repositories;
 using FileManager.Domain.Services;
+using FileManager.Infrastructure.BackgroundWorkers;
 using FileManager.Infrastructure.Configuration;
 using FileManager.Infrastructure.Persistence.SqlServer.Connection;
 using FileManager.Infrastructure.Persistence.SqlServer.Migrations;
@@ -15,6 +17,7 @@ using Kootam.Cqrs.Abstractions.Behaviors;
 using Kootam.Cqrs.DependencyInjections;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace FileManager.Infrastructure.DependencyInjection;
 
@@ -26,11 +29,14 @@ public static class InfrastructureServiceCollectionExtensions
     {
         services.Configure<SqlServerOptions>(configuration.GetSection(SqlServerOptions.SectionName));
         services.Configure<RustFsOptions>(configuration.GetSection(RustFsOptions.SectionName));
+        services.Configure<UploadStagingOptions>(configuration.GetSection(UploadStagingOptions.SectionName));
 
         AddPersistence(services);
         AddObjectStorage(services, configuration);
         AddDomainServices(services);
+        AddBackgroundWorkers(services);
         AddCqrsPipeline(services);
+        services.AddFileManagerAuthentication(configuration);
 
         return services;
     }
@@ -41,6 +47,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<SqlMigrationRunner>();
 
         services.AddScoped<IApplicationRepository, ApplicationRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IFolderRepository, FolderRepository>();
         services.AddScoped<IStorageFileRepository, StorageFileRepository>();
         services.AddScoped<ITrashRepository, TrashRepository>();
@@ -70,6 +77,17 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IHashCalculator, HashCalculator>();
         services.AddSingleton<IFileNameGenerator, FileNameGenerator>();
         services.AddSingleton<IStoragePathGenerator, StoragePathGenerator>();
+        services.AddSingleton<IImageConverter, ImageConverter>();
+        services.AddSingleton<IVideoConverter, VideoConverter>();
+        services.AddScoped<FileUploadService>();
+    }
+
+    private static void AddBackgroundWorkers(IServiceCollection services)
+    {
+        services.AddSingleton<FileUploadQueue>();
+        services.AddSingleton<IFileUploadQueue>(sp => sp.GetRequiredService<FileUploadQueue>());
+        services.AddSingleton<IUploadStagingService, UploadStagingService>();
+        services.AddHostedService<FileUploadBackgroundWorker>();
     }
 
     private static void AddCqrsPipeline(IServiceCollection services)
