@@ -1,3 +1,4 @@
+using FileManager.Application.Features.Commands.Applications;
 using FileManager.Application.Features.Queries.Applications;
 using FileManager.Contracts.Responses.Applications;
 using Kootam.Framework.Presentations.Controllers;
@@ -15,11 +16,11 @@ namespace FileManager.Api.Controllers.Manage;
 public sealed class ManageApplicationsController : BaseCqrsController
 {
     /// <summary>
-    /// Returns active applications for the admin navigation menu.
+    /// Returns active applications with token and upload limits.
     /// </summary>
     [HttpGet]
     public Task<IActionResult> GetAll()
-        => Query<IReadOnlyList<ApplicationMenuItemResponse>>(new GetApplicationsQuery());
+        => Query<IReadOnlyList<ApplicationResponse>>(new GetApplicationsQuery());
 
     /// <summary>
     /// Gets min/max upload limits (kilobytes) for images, videos, and documents.
@@ -27,4 +28,14 @@ public sealed class ManageApplicationsController : BaseCqrsController
     [HttpGet("{applicationId:long}/upload-limits")]
     public Task<IActionResult> GetUploadLimits([FromRoute] long applicationId)
         => Query<ApplicationUploadLimitsResponse>(new GetApplicationUploadLimitsQuery(applicationId));
+
+    /// <summary>
+    /// Regenerates the application token. The previous token stops working immediately.
+    /// </summary>
+    [HttpPost("{applicationId:long}/regenerate-token")]
+    public Task<IActionResult> RegenerateToken([FromRoute] long applicationId)
+    {
+        var command = new RegenerateApplicationTokenCommand(applicationId);
+        return Create<RegenerateApplicationTokenCommand, RegenerateApplicationTokenResponse>(command);
+    }
 }

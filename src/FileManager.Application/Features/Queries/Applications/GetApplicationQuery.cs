@@ -3,4 +3,4 @@ using Kootam.Cqrs.Abstractions.Queries;
 
 namespace FileManager.Application.Features.Queries.Applications;
 
-public sealed record GetApplicationsQuery : IQuery<IReadOnlyList<ApplicationResponse>>;
+public sealed record GetApplicationQuery(long ApplicationId) : IQuery<ApplicationResponse>;

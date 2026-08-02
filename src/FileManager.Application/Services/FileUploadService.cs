@@ -145,6 +145,13 @@ public sealed class FileUploadService(
                     now);
 
                 await storageFileRepository.UpdateAsync(file, cancellationToken);
+
+                await TryGenerateAndSaveThumbnailAsync(
+                    file,
+                    storageContext,
+                    fileBusinessId,
+                    processed,
+                    cancellationToken);
             }
             finally
             {
@@ -242,6 +249,69 @@ public sealed class FileUploadService(
         }
     }
 
+    private async Task TryGenerateAndSaveThumbnailAsync(
+        StorageFile file,
+        ApplicationStorageContext storageContext,
+        Guid fileBusinessId,
+        ProcessedUploadContent processed,
+        CancellationToken cancellationToken)
+    {
+        if (file.ThumbnailStatus is not ThumbnailStatus.Pending)
+            return;
+
+        try
+        {
+            processed.Content.Position = 0;
+            ConvertedMedia? thumbnail = null;
+
+            try
+            {
+                if (processed.FileType is StorageFileType.Image && imageConverter.CanConvert(processed.MimeType.Value))
+                {
+                    thumbnail = await imageConverter.CreateThumbnailAsync(
+                        processed.Content,
+                        ThumbnailMaxEdgeLength,
+                        cancellationToken);
+                }
+                else if (processed.FileType is StorageFileType.Video)
+                {
+                    thumbnail = await videoConverter.ExtractThumbnailAsync(
+                        processed.Content,
+                        processed.FileName,
+                        ThumbnailMaxEdgeLength,
+                        cancellationToken);
+                }
+                else
+                {
+                    file.FailThumbnail();
+                    await storageFileRepository.UpdateAsync(file, cancellationToken);
+                    return;
+                }
+
+                var thumbnailObjectKey = storagePathGenerator.GenerateThumbnailObjectKey(fileBusinessId);
+                await fileStorageService.SaveThumbnailAsync(
+                    storageContext,
+                    thumbnailObjectKey.Value,
+                    thumbnail.Content,
+                    thumbnail.ContentType,
+                    cancellationToken);
+
+                file.AttachThumbnail(thumbnailObjectKey);
+                await storageFileRepository.UpdateAsync(file, cancellationToken);
+            }
+            finally
+            {
+                if (thumbnail is not null)
+                    await thumbnail.Content.DisposeAsync();
+            }
+        }
+        catch
+        {
+            file.FailThumbnail();
+            await storageFileRepository.UpdateAsync(file, cancellationToken);
+        }
+    }
+
     private static async Task<MemoryStream> CopyToMemoryStreamAsync(Stream source, CancellationToken cancellationToken)
     {
         var memoryStream = new MemoryStream();
@@ -249,6 +319,8 @@ public sealed class FileUploadService(
         memoryStream.Position = 0;
         return memoryStream;
     }
+
+    private const int ThumbnailMaxEdgeLength = 320;
 
     private sealed record ProcessedUploadContent(
         MemoryStream Content,
