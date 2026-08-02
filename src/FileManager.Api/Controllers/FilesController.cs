@@ -1,6 +1,11 @@
+using FileManager.Application.Abstractions;
 using FileManager.Application.Features.Commands.Files;
 using FileManager.Application.Features.Queries.Files;
 using FileManager.Contracts.Responses.Files;
+using FileManager.Domain.Enumerations;
+using FileManager.Domain.Messages;
+using FileManager.Domain.Repositories;
+using Kootam.Framework.Domain.ValueObjects;
 using Kootam.Framework.Presentations.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,7 +18,10 @@ namespace FileManager.Api.Controllers;
 [Route("api/applications/{applicationId:long}/files")]
 [RequestSizeLimit(524_288_000)]
 [RequestFormLimits(MultipartBodyLengthLimit = 524_288_000)]
-public sealed class FilesController : BaseCqrsController
+public sealed class FilesController(
+    IApplicationRepository applicationRepository,
+    IStorageFileRepository storageFileRepository,
+    IFileStorageService fileStorageService) : BaseCqrsController
 {
     /// <summary>
     /// Queues a file upload for background processing. Returns immediately with UploadStatus Pending (0).
@@ -79,6 +87,35 @@ public sealed class FilesController : BaseCqrsController
     {
         var query = new GetFileQuery(applicationId, fileBusinessId, isDeleted);
         return Query<StorageFileResponse>(query);
+    }
+
+    /// <summary>
+    /// Downloads the stored file content as an attachment.
+    /// </summary>
+    [HttpGet("{fileBusinessId:guid}/download")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Download(
+        [FromRoute] long applicationId,
+        [FromRoute] Guid fileBusinessId,
+        CancellationToken cancellationToken)
+    {
+        var application = await applicationRepository.GetAsync(applicationId, cancellationToken);
+        if (application is null)
+            return NotFound(DomainMessages.ApplicationNotFound);
+
+        var file = await storageFileRepository.GetByBusinessIdAsync(
+            applicationId, BusinessId.FromGuid(fileBusinessId), cancellationToken);
+
+        if (file is null || file.IsDeleted || file.UploadStatus != UploadStatus.Completed)
+            return NotFound(DomainMessages.FileNotFound);
+
+        var stream = await fileStorageService.OpenFileAsync(
+            new ApplicationStorageContext(application.ApplicationName, file.FileType),
+            file.ObjectKey.Value,
+            cancellationToken);
+
+        return File(stream, file.MimeType.Value, file.Name.Value);
     }
 
     /// <summary>

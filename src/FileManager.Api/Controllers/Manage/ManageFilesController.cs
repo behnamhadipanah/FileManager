@@ -86,6 +86,33 @@ public sealed class ManageFilesController(
         return File(stream, file.MimeType.Value);
     }
 
+    /// <summary>
+    /// Downloads the stored file content as an attachment.
+    /// </summary>
+    [HttpGet("{fileBusinessId:guid}/download")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Download(
+        [FromRoute] long applicationId,
+        [FromRoute] Guid fileBusinessId,
+        CancellationToken cancellationToken)
+    {
+        var fileResult = await ResolveFileAsync(applicationId, fileBusinessId, cancellationToken);
+        if (fileResult.Error is not null)
+            return fileResult.Error;
+
+        var file = fileResult.File!;
+        if (file.UploadStatus != UploadStatus.Completed)
+            return NotFound(DomainMessages.FileNotFound);
+
+        var stream = await fileStorageService.OpenFileAsync(
+            fileResult.StorageContext!,
+            file.ObjectKey.Value,
+            cancellationToken);
+
+        return File(stream, file.MimeType.Value, file.Name.Value);
+    }
+
     private async Task<(Domain.Aggregates.FileAgg.StorageFile? File, ApplicationStorageContext? StorageContext, IActionResult? Error)> ResolveFileAsync(
         long applicationId,
         Guid fileBusinessId,

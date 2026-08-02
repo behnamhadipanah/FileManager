@@ -159,7 +159,30 @@ parentFolderBusinessId: <optional-guid>
 
 Batch upload: `POST /api/applications/{applicationId}/files/batch`.
 
-### 4. Browse with application token
+### 4. Download a file
+
+Application clients:
+
+```http
+GET /api/applications/{applicationId}/files/{fileBusinessId}/download
+```
+
+Admin (JWT):
+
+```http
+GET /api/manage/applications/{applicationId}/files/{fileBusinessId}/download
+```
+
+Both return the file bytes with `Content-Disposition: attachment` using the stored file name. The file must have `UploadStatus` = Completed. The application download also rejects soft-deleted files.
+
+For inline preview without forcing a download, use the manage content endpoint:
+
+```http
+GET /api/manage/applications/{applicationId}/files/{fileBusinessId}/content
+GET /api/manage/applications/{applicationId}/files/{fileBusinessId}/thumbnail
+```
+
+### 5. Browse with application token
 
 ```http
 GET /api/application
@@ -172,7 +195,7 @@ GET /api/application/upload-limits
 X-Application-Token: <token>
 ```
 
-### 5. Soft delete / trash / restore
+### 6. Soft delete / trash / restore
 
 ```http
 DELETE /api/applications/{applicationId}/files/{fileBusinessId}
@@ -198,7 +221,8 @@ DELETE /api/applications/{applicationId}/trash/items/{trashItemId}
 | `GET` | `/api/application/trash/items` | Browse trash by token |
 | `GET` | `/api/application/upload-limits` | Limits by token |
 | `*` | `/api/applications/{id}/folders` | Folder CRUD |
-| `*` | `/api/applications/{id}/files` | Upload, get, delete, restore |
+| `*` | `/api/applications/{id}/files` | Upload, get, download, delete, restore |
+| `GET` | `/api/applications/{id}/files/{fileBusinessId}/download` | Download file attachment |
 | `*` | `/api/applications/{id}/trash` | Trash operations |
 | `GET` | `/api/applications/{id}/upload-limits` | Limits by application id |
 
@@ -213,7 +237,10 @@ DELETE /api/applications/{applicationId}/trash/items/{trashItemId}
 | `GET` | `/api/manage/applications/{id}/upload-limits` | Limits |
 | `POST` | `/api/manage/applications/{id}/regenerate-token` | Rotate token |
 | `GET` | `/api/manage/applications/{id}/folders/...` | Browse folders |
-| `GET` | `/api/manage/applications/{id}/files/...` | Browse/download files & thumbnails |
+| `GET` | `/api/manage/applications/{id}/files/{fileBusinessId}` | File metadata |
+| `GET` | `/api/manage/applications/{id}/files/{fileBusinessId}/content` | Inline file stream (preview) |
+| `GET` | `/api/manage/applications/{id}/files/{fileBusinessId}/thumbnail` | Thumbnail WebP stream |
+| `GET` | `/api/manage/applications/{id}/files/{fileBusinessId}/download` | Download file attachment |
 | `GET` | `/api/manage/applications/{id}/trash/items` | Browse trash |
 
 Full interactive docs: Scalar at `/scalar/v1` when running in Development.
