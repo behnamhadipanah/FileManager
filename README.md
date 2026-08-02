@@ -74,12 +74,29 @@ When `SqlServer:AutoMigrate` is `true`, the API migrates the database and seeds 
 From the repository root:
 
 ```bash
-docker compose -f docker/docker-compose.yml up --build
+docker compose -f docker/docker-compose.yml up --build -d
+docker compose -f docker/docker-compose.yml logs -f filemanager-api
+docker compose -f docker/docker-compose.yml down
 ```
 
-This starts SQL Server, RustFS, Elasticsearch, and the API on `http://localhost:8080`.
+Stack services:
 
-Compose credentials differ from local `appsettings.json` — see `docker/docker-compose.yml` for ports and secrets.
+| Service | Host port | Notes |
+|---------|-----------|-------|
+| API | `8080` | Image installs FFmpeg + curl; auto-migrates DB and seeds admin |
+| SQL Server | `1433` | SA password `Your_password123` |
+| RustFS S3 API | `9000` | Access key `rustfsadmin` / secret `rustfsadmin123` |
+| RustFS console | `9001` | Storage UI |
+
+The API waits until SQL Server is healthy, then starts with:
+
+- `SqlServer__AutoMigrate=true`
+- RustFS path-style addressing
+- JWT settings matching `appsettings.json`
+
+Build context is the repo root (`docker/FileManager.Api.Dockerfile`) and uses local packages from `./nugets`. `.dockerignore` keeps build context lean.
+
+Compose credentials differ from local `appsettings.json` (ports `1533` / `9100`). Default seeded admin remains `admin@admin.com` / `admin`.
 
 ## Authentication
 

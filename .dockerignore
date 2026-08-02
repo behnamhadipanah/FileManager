@@ -1,0 +1,15 @@
+**/.git
+**/.idea
+**/.vs
+**/.vscode
+**/.run
+**/bin
+**/obj
+**/TestResults
+**/*.user
+**/*.log
+docs/
+tests/
+scripts/
+*.md
+!nuget.config
