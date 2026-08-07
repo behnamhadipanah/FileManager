@@ -61,6 +61,7 @@ services:
       SqlServer__AutoMigrate: "true"
       SqlServer__ConnectionString: "Server=sqlserver,1433;Database=FileManager;User Id=sa;Password=Your_password123;TrustServerCertificate=True;Application Name=FileManager;"
       RustFs__ServiceUrl: "http://rustfs:9000"
+      RustFs__PublicServiceUrl: "http://localhost:9100"
       RustFs__AccessKey: "rustfsadmin"
       RustFs__SecretKey: "rustfsadmin123"
       RustFs__ForcePathStyle: "true"

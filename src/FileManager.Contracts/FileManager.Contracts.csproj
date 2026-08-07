@@ -7,8 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Common\" />
-      <Folder Include="Events\" />
       <Folder Include="Requests\Applications\" />
       <Folder Include="Requests\Files\" />
       <Folder Include="Requests\Folders\" />

@@ -7,6 +7,7 @@ using FileManager.Domain.Messages;
 using FileManager.Domain.Repositories;
 using Kootam.Framework.Domain.ValueObjects;
 using Kootam.Framework.Presentations.Controllers;
+using Kootam.Translator.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FileManager.Api.Controllers;
@@ -21,7 +22,8 @@ namespace FileManager.Api.Controllers;
 public sealed class FilesController(
     IApplicationRepository applicationRepository,
     IStorageFileRepository storageFileRepository,
-    IFileStorageService fileStorageService) : BaseCqrsController
+    IFileStorageService fileStorageService,
+    ITranslator translator) : BaseCqrsController
 {
     /// <summary>
     /// Queues a file upload for background processing. Returns immediately with UploadStatus Pending (0).
@@ -102,13 +104,13 @@ public sealed class FilesController(
     {
         var application = await applicationRepository.GetAsync(applicationId, cancellationToken);
         if (application is null)
-            return NotFound(DomainMessages.ApplicationNotFound);
+            return NotFound(translator.Get(DomainMessages.ApplicationNotFound));
 
         var file = await storageFileRepository.GetByBusinessIdAsync(
             applicationId, BusinessId.FromGuid(fileBusinessId), cancellationToken);
 
         if (file is null || file.IsDeleted || file.UploadStatus != UploadStatus.Completed)
-            return NotFound(DomainMessages.FileNotFound);
+            return NotFound(translator.Get(DomainMessages.FileNotFound));
 
         var stream = await fileStorageService.OpenFileAsync(
             new ApplicationStorageContext(application.ApplicationName, file.FileType),

@@ -1,5 +1,8 @@
 <Solution>
-  <Folder Name="/docker/" />
+  <Folder Name="/docker/">
+    <File Path="docker/docker-compose.yml" />
+    <File Path="docker/FileManager.Api.Dockerfile" />
+  </Folder>
   <Folder Name="/docs/" />
   <Folder Name="/src/">
     <Project Path="src/FileManager.Api/FileManager.Api.csproj" />

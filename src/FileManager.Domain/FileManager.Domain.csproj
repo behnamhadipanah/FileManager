@@ -15,10 +15,8 @@
       <Folder Include="Aggregates\FileAgg\" />
       <Folder Include="Aggregates\FolderAgg\" />
       <Folder Include="Aggregates\TrashAgg\" />
-      <Folder Include="Entities\" />
       <Folder Include="Events\" />
       <Folder Include="Policies\" />
-      <Folder Include="Specifications\" />
     </ItemGroup>
 
 </Project>

@@ -1,3 +1,4 @@
+using FileManager.Application.Abstractions;
 using FileManager.Application.Mappers;
 using FileManager.Contracts.Responses.Files;
 using FileManager.Domain.Messages;
@@ -15,8 +16,10 @@ public sealed record GetFileQuery(
     bool? IsDeleted = null) : IQuery<StorageFileResponse>;
 
 public sealed class GetFileQueryHandler(
+    IApplicationRepository applicationRepository,
     IStorageFileRepository storageFileRepository,
-    IFolderRepository folderRepository)
+    IFolderRepository folderRepository,
+    IFileStorageService fileStorageService)
     : IQueryHandler<GetFileQuery, StorageFileResponse>
 {
     public async Task<Result<StorageFileResponse>> Handle(
@@ -31,7 +34,16 @@ public sealed class GetFileQueryHandler(
         if (query.IsDeleted is not null && file.IsDeleted != query.IsDeleted)
             return Result<StorageFileResponse>.Failure(ResultStatus.NotFound, DomainMessages.FileNotFound);
 
+        var application = await applicationRepository.GetAsync(query.ApplicationId, cancellationToken);
+        if (application is null)
+            return Result<StorageFileResponse>.Failure(ResultStatus.NotFound, DomainMessages.ApplicationNotFound);
+
         return Result<StorageFileResponse>.Success(
-            await StorageFileMapper.ToResponseAsync(file, folderRepository, cancellationToken));
+            await StorageFileMapper.ToResponseAsync(
+                file,
+                application.ApplicationName,
+                folderRepository,
+                fileStorageService,
+                cancellationToken));
     }
 }

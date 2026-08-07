@@ -37,4 +37,6 @@ public interface IFileStorageService
         ApplicationStorageContext context,
         string objectKey,
         CancellationToken cancellationToken);
+
+    string GetPublicFileUrl(ApplicationStorageContext context, string objectKey);
 }

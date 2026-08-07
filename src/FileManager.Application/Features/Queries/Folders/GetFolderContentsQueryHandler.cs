@@ -1,3 +1,4 @@
+using FileManager.Application.Abstractions;
 using FileManager.Application.Mappers;
 using FileManager.Contracts.Responses.Folders;
 using FileManager.Domain.Messages;
@@ -12,13 +13,18 @@ namespace FileManager.Application.Features.Queries.Folders;
 public sealed class GetFolderContentsQueryHandler(
     IApplicationRepository applicationRepository,
     IFolderRepository folderRepository,
-    IStorageFileRepository storageFileRepository)
+    IStorageFileRepository storageFileRepository,
+    IFileStorageService fileStorageService)
     : IQueryHandler<GetFolderContentsQuery, FolderContentsResponse>
 {
     public async Task<Result<FolderContentsResponse>> Handle(
         GetFolderContentsQuery query, CancellationToken cancellationToken = default)
     {
         if (!await applicationRepository.ExistsAsync(query.ApplicationId, cancellationToken))
+            return Result<FolderContentsResponse>.Failure(ResultStatus.NotFound, DomainMessages.ApplicationNotFound);
+
+        var application = await applicationRepository.GetAsync(query.ApplicationId, cancellationToken);
+        if (application is null)
             return Result<FolderContentsResponse>.Failure(ResultStatus.NotFound, DomainMessages.ApplicationNotFound);
 
         var currentFolder = query.FolderBusinessId is null
@@ -48,7 +54,11 @@ public sealed class GetFolderContentsQueryHandler(
 
         var currentFolderBusinessId = (Guid)currentFolder.BusinessId;
         var fileResponses = childFiles
-            .Select(file => StorageFileMapper.ToResponse(file, currentFolderBusinessId))
+            .Select(file => StorageFileMapper.ToResponse(
+                file,
+                currentFolderBusinessId,
+                application.ApplicationName,
+                fileStorageService))
             .ToList();
 
         return Result<FolderContentsResponse>.Success(new FolderContentsResponse

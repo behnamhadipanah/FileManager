@@ -2,13 +2,26 @@ using FileManager.Infrastructure.Configuration;
 using FileManager.Infrastructure.DependencyInjection;
 using FileManager.Infrastructure.Persistence.SqlServer.Migrations;
 using FileManager.Infrastructure.Seeding;
+using Kootam.Translator.Database.DependencyInjection;
 using Kootam.Utilities.ScalarRegistration.DependencyInjection;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+builder.AddFileManagerTranslator();
 builder.Services.AddFileManagerInfrastructure(builder.Configuration);
+
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var defaultCulture = builder.Configuration["Translator:DefaultCulture"] ?? "fa-IR";
+
+    options.SetDefaultCulture(defaultCulture);
+    options.AddSupportedCultures("en-US", "fa-IR");
+    options.AddSupportedUICultures("en-US", "fa-IR");
+    options.RequestCultureProviders.Insert(0, new AcceptLanguageHeaderRequestCultureProvider());
+});
 
 builder.Services.AddScalar(options =>
 {
@@ -31,16 +44,19 @@ if (sqlServerOptions.AutoMigrate)
     await userSeeder.SeedAsync();
 }
 
-app.UseHttpsRedirection();
+app.UseTranslator();
+
+if (!app.Environment.IsProduction())
+{
+    app.UseHttpsRedirection();
+}
+
+app.UseRequestLocalization();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseScalar();
-}
+app.UseScalar();
 
 app.Run();

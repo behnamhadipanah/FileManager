@@ -93,7 +93,12 @@ public sealed class FileUploadService(
             contentType), cancellationToken);
 
         return Result<StorageFileResponse>.Success(
-            await StorageFileMapper.ToResponseAsync(file, folderRepository, cancellationToken));
+            await StorageFileMapper.ToResponseAsync(
+                file,
+                application.ApplicationName,
+                folderRepository,
+                fileStorageService,
+                cancellationToken));
     }
 
     public async Task ProcessQueuedUploadAsync(FileUploadWorkItem item, CancellationToken cancellationToken)

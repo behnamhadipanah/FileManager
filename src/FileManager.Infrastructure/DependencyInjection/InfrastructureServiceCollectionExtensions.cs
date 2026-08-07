@@ -103,5 +103,6 @@ public static class InfrastructureServiceCollectionExtensions
         // Kootam.Cqrs.Exceptions.DomainStateException, a different type. See the behavior's
         // XML doc for details.
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(DomainExceptionMappingBehavior<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ResultTranslationBehavior<,>));
     }
 }

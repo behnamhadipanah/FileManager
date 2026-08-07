@@ -2,6 +2,7 @@ using FileManager.Domain.Exceptions;
 using Kootam.Cqrs.Abstractions.Behaviors;
 using Kootam.Cqrs.Abstractions.Enums;
 using Kootam.Cqrs.Abstractions.Models;
+using Kootam.Translator.Abstractions;
 
 namespace FileManager.Application.Behaviors;
 
@@ -15,6 +16,13 @@ namespace FileManager.Application.Behaviors;
 public sealed class DomainExceptionMappingBehavior<TRequest, TResult> : IPipelineBehavior<TRequest, TResult>
     where TResult : Result
 {
+    private readonly ITranslator _translator;
+
+    public DomainExceptionMappingBehavior(ITranslator translator)
+    {
+        _translator = translator;
+    }
+
     public async Task<TResult> Handle(
         TRequest request,
         RequestHandlerDelegate<TResult> next,
@@ -26,7 +34,11 @@ public sealed class DomainExceptionMappingBehavior<TRequest, TResult> : IPipelin
         }
         catch (DomainException ex)
         {
-            var result = Result.Failure(ResultStatus.ValidationError, ex.ToString());
+            var message = ex.Parameters?.Length > 0
+                ? _translator.Get(ex.Message, ex.Parameters)
+                : _translator.Get(ex.Message);
+
+            var result = Result.Failure(ResultStatus.ValidationError, message);
             return (TResult)(object)result;
         }
     }

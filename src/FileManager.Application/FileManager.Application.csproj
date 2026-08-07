@@ -11,6 +11,7 @@
       <PackageReference Include="Kootam.Framework.Application" Version="1.0.0" />
       <PackageReference Include="Kootam.Cqrs.Abstractions" Version="1.0.0" />
       <PackageReference Include="Kootam.Authentication.Abstractions" Version="1.0.0" />
+      <PackageReference Include="Kootam.Translator.Abstractions" Version="1.0.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -21,10 +22,7 @@
     <ItemGroup>
       <Folder Include="Abstractions\" />
       <Folder Include="Authentication\" />
-      <Folder Include="BackgroundJobs\" />
       <Folder Include="Behaviors\" />
-      <Folder Include="DTOs\" />
-      <Folder Include="EventHandlers\" />
       <Folder Include="Features\Commands\Applications\" />
       <Folder Include="Features\Commands\Files\" />
       <Folder Include="Features\Commands\Folders\" />

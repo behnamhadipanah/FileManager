@@ -75,4 +75,9 @@ public sealed class FileStorageService(
             bucketNaming.GetThumbnailsBucketName(context.ApplicationName, context.FileType),
             objectKey,
             cancellationToken);
+
+    public string GetPublicFileUrl(ApplicationStorageContext context, string objectKey) =>
+        objectStorage.GetPublicUrl(
+            bucketNaming.GetFilesBucketName(context.ApplicationName, context.FileType),
+            objectKey);
 }

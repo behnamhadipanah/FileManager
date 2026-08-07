@@ -15,4 +15,5 @@ public sealed class StorageFileResponse
     public bool IsDeleted { get; set; }
     public DateTime? DeletionTime { get; set; }
     public DateTime CreationTime { get; set; }
+    public string? PublicUrl { get; set; }
 }

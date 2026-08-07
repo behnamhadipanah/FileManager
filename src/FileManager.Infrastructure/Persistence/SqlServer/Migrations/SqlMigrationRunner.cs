@@ -26,9 +26,11 @@ public sealed class SqlMigrationRunner(
 
     public async Task RunAsync(CancellationToken cancellationToken = default)
     {
+        
         await EnsureDatabaseExistsAsync(cancellationToken);
 
         await using var conn = (SqlConnection)connectionFactory.CreateWriteConnection();
+        
         await conn.OpenAsync(cancellationToken);
 
         await EnsureSchemaExistsAsync(conn, cancellationToken);
@@ -60,7 +62,9 @@ public sealed class SqlMigrationRunner(
 
     private async Task EnsureDatabaseExistsAsync(CancellationToken cancellationToken)
     {
+
         var builder = new SqlConnectionStringBuilder(_options.ConnectionString);
+        
         var databaseName = builder.InitialCatalog;
 
         if (string.IsNullOrWhiteSpace(databaseName))

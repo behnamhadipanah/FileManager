@@ -6,6 +6,7 @@ using FileManager.Domain.Messages;
 using FileManager.Domain.Repositories;
 using Kootam.Framework.Domain.ValueObjects;
 using Kootam.Framework.Presentations.Controllers;
+using Kootam.Translator.Abstractions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -21,7 +22,8 @@ namespace FileManager.Api.Controllers.Manage;
 public sealed class ManageFilesController(
     IApplicationRepository applicationRepository,
     IStorageFileRepository storageFileRepository,
-    IFileStorageService fileStorageService) : BaseCqrsController
+    IFileStorageService fileStorageService,
+    ITranslator translator) : BaseCqrsController
 {
     /// <summary>
     /// Gets a file by business id. Optional isDeleted filter.
@@ -51,7 +53,7 @@ public sealed class ManageFilesController(
 
         var file = fileResult.File!;
         if (file.ThumbnailObjectKey is null || file.ThumbnailStatus != ThumbnailStatus.Completed)
-            return NotFound(DomainMessages.FileNotFound);
+            return NotFound(translator.Get(DomainMessages.FileNotFound));
 
         var stream = await fileStorageService.OpenThumbnailAsync(
             fileResult.StorageContext!,
@@ -76,7 +78,7 @@ public sealed class ManageFilesController(
 
         var file = fileResult.File!;
         if (file.UploadStatus != UploadStatus.Completed)
-            return NotFound(DomainMessages.FileNotFound);
+            return NotFound(translator.Get(DomainMessages.FileNotFound));
 
         var stream = await fileStorageService.OpenFileAsync(
             fileResult.StorageContext!,
@@ -103,7 +105,7 @@ public sealed class ManageFilesController(
 
         var file = fileResult.File!;
         if (file.UploadStatus != UploadStatus.Completed)
-            return NotFound(DomainMessages.FileNotFound);
+            return NotFound(translator.Get(DomainMessages.FileNotFound));
 
         var stream = await fileStorageService.OpenFileAsync(
             fileResult.StorageContext!,
@@ -120,13 +122,13 @@ public sealed class ManageFilesController(
     {
         var application = await applicationRepository.GetAsync(applicationId, cancellationToken);
         if (application is null)
-            return (null, null, NotFound(DomainMessages.ApplicationNotFound));
+            return (null, null, NotFound(translator.Get(DomainMessages.ApplicationNotFound)));
 
         var file = await storageFileRepository.GetByBusinessIdAsync(
             applicationId, BusinessId.FromGuid(fileBusinessId), cancellationToken);
 
         if (file is null)
-            return (null, null, NotFound(DomainMessages.FileNotFound));
+            return (null, null, NotFound(translator.Get(DomainMessages.FileNotFound)));
 
         var storageContext = new ApplicationStorageContext(application.ApplicationName, file.FileType);
         return (file, storageContext, null);

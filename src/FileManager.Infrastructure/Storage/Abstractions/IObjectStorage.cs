@@ -13,4 +13,5 @@ public interface IObjectStorage
     Task DeleteAsync(string bucket, string objectKey, CancellationToken cancellationToken);
     Task<bool> ExistsAsync(string bucket, string objectKey, CancellationToken cancellationToken);
     Task EnsureBucketExistsAsync(string bucket, CancellationToken cancellationToken);
+    string GetPublicUrl(string bucket, string objectKey);
 }
